@@ -1,0 +1,233 @@
+0.11.0
+------
+ 1. Gtk3 support.
+ 2. Better, and safer, lookup of file filters.
+ 3. Correctly determine size of string needed for pidfile!
+ 4. Add thunderbird, and LibreOffice apps, to list of gtk2 apps.
+ 5. Cleanup usless stuff; remove kdialogd3, qt3, qt4, kgtk2-wrapper,
+    kqt3-wrapper, kqt4-wrapper. 
+ 6. Merge kgtkXX-wrapper scripts into kgtk-wrapper
+ 7. Install kdialogd4 into KDE4 libexec dir.
+ 8. Fix crash where client is terminated whilst file dialog is open.
+ 9. Configurable debug. Pass cmake -DKGTK_DEBUG=true
+    When starting app, set KGTK_DEBUG env var, e.g.
+
+    KGTK_DEBUG=0x10 kgtk-wrapper lowriter
+
+        0x01 Connection debug
+        0x02 General debug
+        0x04 Filter get and set debug
+        0x08 Filter creation debug
+        0x10 Custom widget debug
+        0x20 dlsym debug
+    Values may be combined
+
+10. If LibreOffice is detected (app is libreoffice, lowriter, etc.) then
+    also set the OOO_FORCE_DESKTOP env var to gnome, so that we get nicer
+    themeing.
+11. When passing filters to KFileDialog, replace / with \/
+12. Make filter combo non-editable.
+13. When returning selected filter to Gtk app, also return the filter name
+    and not just the file pattern. This way if two filters have the same file
+    pattern the corrent one can be selected.
+14. Support for checkbox custom widgets.
+15. Save location history per app.
+
+0.10.1
+------
+1. Fix 'kgtk-wrapper ./app' case.
+2. Set filename for KdialogD4's save as filedialog.
+3. Hacky fix for Firefox crashing when trying to save to a file that
+   already exists -> delete it first!
+4. When launching KDialogD, try todetermin which version is installed.
+5. Add some compile fixes from kde-apps
+
+0.10
+----
+1. Fix CMake bug at double definition of destantion dir for gmo.
+   - thanks to Yar Odin.
+2. When KDialogD is started, write its PID to a file. When each app
+   attempts to connect to KDialogD, it checks if the PID in the file
+   is still active - if not it starts KDialogD.
+3. KIO::NetAccess::mostLocalUrl fails if a file does not exist. If so,
+   then check if parent folder exists - and if so, append filename to
+   that.
+
+0.9.6
+-----
+1. Fix russion translation files - thanks to Yar Odin
+2. Fix some CMake 2.6 issues.
+
+0.9.5
+-----
+1. Fix detection of firefox. Treat xulrunner as Firefox.
+2. Quick hack for kino - always save as .kino
+3. Prevent dummy gtk window from appearing in KDE4's 'present windows'
+   window selector.
+4. Translations:
+       Brazillian Portuguese (pt_BR) Márcio Moraes
+       Russion (ru) Yar Odin
+5. Fix kdialogd4's file widget.
+6. Fix kgtk-wrapper script for relative paths - thanks to Ingo Müller.
+7. set G_BROKEN_FILENAMES=1 for non UTF8 locales.
+
+0.9.4
+-----
+1. Translations:
+       Spanish (es) Marco Antonio Blanco <mablanco@activasistemas.com>
+2. When saving with opera, show the suggested filename.
+
+0.9.3
+-----
+1. Translations:
+       German (de) jakuhr-linux@gmx.de
+       Czech  (cs) Marián Kyral <mkyral@email.cz>
+2. Fix firefox crash when overwriting an existing file.
+
+0.9.2
+-----
+1. Remove 'which gimp' from kgtk-wrapper - oops!
+2. In kgtk-wrapper, set opera to use qt3
+3. Fix opera crash.
+4. Use GLib's convert function to convert to/from utf8, and
+   to/from URIs
+5. Walk through Qt3's QFileDialog's children to locate combobox
+   containing filetypes, as opposed to using a copy of QFileDialogPrivate
+6. Translations:
+       Simplified Chinese (zh_CN) Liang Qi <cavendish.qi@gmail.com>
+       French             (fr)    Paul Thomas <pw1517@gmail.com>
+       British English	  (en_GB) Me!
+7. Implement over-riding of non statically called Qt4 QFileDialogs
+
+0.9.1
+-----
+1. Use cmake as build system.
+2. Fix recognition of gimp 2.4
+3. Fix translation of standard kde strings.
+4. Fix case where kgtk-wrapper is called via a symlink.
+
+0.9
+---
+1. Fix dialog parenting issues with Gtk folder picker combo/menu.
+2. Fix compilation issue for KDE < 3.4
+3. Treat Iceweasel and Swiftfox the same as firefox.
+4. Improve operation under beryl.
+5. Add KDE4 and Qt4 support.
+6. Reduce heavy CPU usage of kqt
+7. Fix some i18n issues.
+8. Place wrapper scripts into prefix/bin, and libraries into prefix/lib/kgtk
+9. kgtk-wrapper can now be called for Gtk2, Qt3, nd Qt4 apps. The app is checked
+   to determin which toolkit it is using. If this check fails, you may edit
+   ~/.kde/share/config/kgtkrc and add lines such as
+
+   [Apps]
+   eclipse=gtk2
+   scribus=qt3
+   abiword=x
+
+   Setting "abiword=x" disables kgtk for abiword (as it doesnt work!)
+
+0.8
+---
+1. Install scripts into $prefix/bin as opposed to hard-coding
+   /usr/local/bin
+2. Debug messages are disabled by default, to enable reconfigure
+   with --enable-debug-messages
+3. Work correctly for autopackage'd apps - e.g. Inkscape 0.44
+4. Fix inkscape 0.44's export bitmap file dialog appearing underneath
+   export dialog.
+5. Convert kdialogd to a KDE app. This app is started by Gtk/Qt apps,
+   and will self terminate 30 seconds after the last connected app
+   has disconnected. This timeout can be changed by editing kdialogdrc
+   and changing
+
+    [General]
+    Timeout=10
+
+6. Libraries installed to $KDEPREFIX/share/apps/kgtk
+7. Remove .sh extension from scripts
+8. When starting kdialogd, create the socket folder if it does not
+   already exist.
+
+**NOTE** You *MUST* remove any previous version of KGtk before using this
+version. i.e. you must delete the kded_kdialgd.la, kded_kdialgd.so, and the
+kdialogd.desktop files. KDE also must be restarted - to remove the KDED
+module.
+
+0.7
+---
+1. Bug fix in wrapper scripts, use "$@" and not $* - thanks to
+   Victor Fernandez Martinez
+2. Fix sending of UTF-8 characters from KDED module to app.
+
+0.6
+-----
+1. Check for existance $KDETMP, or $TMPDIR when creating socket.
+2. Use UTF-8 when talking to KDED module.
+
+0.5.1
+-----
+1. Compile fixes - 64bit, Gtk<2.6
+
+0.5
+---
+1. Make the KDED module a load-on-demand module, as opposed to always being
+   loaded. Module can be unloaded with:
+
+      dcop kded kded unloadModule kdialogd 
+
+2. Filters should now work for inkscape save - at least in inkscape 0.43
+3. Add ./configure check to ensure Gtk >= 2.4
+4. Added a ./configure check for dlvsym within libdl, if not found then
+   dlsym is not overriden - and SWT aps wont work :-(
+5. In ./configure try to determine version of dlsym.
+6. Try to load gtk_file_chooser_set/get_do_overwrite_confirmation's
+   from libgtk - if found then use, otherwise assume Gtk app will
+   do overwrite detection.
+7. Correctly handle empty selection in single-file open mode.
+8. Fix initial dir of non-statically called QFileDialogs
+9. Modify Scribus's save file filters to have a "Compressed Documents" entry
+   -- will break localisation of scribus :-(
+
+0.4
+---
+1. Support non-statically called QFileDialogs
+2. Fix compilation under KDE <3.5
+3. Save/restore PATH in wrapper scripts.
+4. Now works with eclipse 3.1 (and all SWT apps? Seems to also work with
+   Azureus)
+5. At start up Gtk app passes its name to KDialogD so that dialog settings
+   can be saved per-app.
+6. Remove patterns from filter combo strings - more KDE like.
+
+** NOTE: After installing v0.4, KDE (or at least kded) *must* be restarted -
+         due to changes in the communication off apps -> kdialogd.
+
+0.3
+---
+1. Don't show Gtk file-overwrite dialogs, handle the file exists case within 
+   KDE portion.
+2. Fix retrieval/display of file filters.
+3. Check for accessing of non-local URLs before dialog is closed.
+
+0.2.2
+-----
+1. Remove kgtk-wrapper.sh and kqt-wrapper.sh shell scripts from archive -
+   these should've been generated at make time. Hopefully they will now.
+
+0.2.1
+-----
+1. Fix qt compile issues.
+
+0.2
+---
+1. Convert kdialogd into a kded module.
+2. Make gtk library a LD_PRELOAD library
+3. Add a Qt library
+4. Try to convert KURL's into local files
+5. When performing a save as, etc, correctly set the current filename and path.
+6. Remove font and colour dialog support
+
+0.1
+---
+1. Initial version.

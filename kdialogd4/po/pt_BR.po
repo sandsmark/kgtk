@@ -1,0 +1,60 @@
+# translation of kdialogd4.po to Brazillian Portuguese
+# This file is put in the public domain.
+#
+# Márcio Moraes <marcio.moraes@redlinks.com.br>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: kdialogd4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-09-21 15:08+0100\n"
+"PO-Revision-Date: 2008-02-26 11:47-0300\n"
+"Last-Translator: Márcio Moraes <marcio.moraes@redlinks.com.br>\n"
+"Language-Team: Márcio Moraes <marcio.moraes@redlinks.com.br>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: kdialogd.cpp:331
+msgid "Open"
+msgstr "Abrir"
+
+#: kdialogd.cpp:334
+msgid "Save As"
+msgstr "Salvar Como"
+
+#: kdialogd.cpp:337
+msgid "Select Folder"
+msgstr "Selecionar Pasta"
+
+#: kdialogd.cpp:627
+msgid "You can only select local files."
+msgstr "Selecione apenas arquivos locais."
+
+#: kdialogd.cpp:628
+msgid "Remote Files Not Accepted"
+msgstr "Arquivos remotos não são aceitos"
+
+#: kdialogd.cpp:634
+msgid ""
+"File %1 exits.\n"
+"Do you want to replace it?"
+msgstr ""
+"Arquivo %1 exite.\n"
+"Você realmente deseja sobrescrever?"
+
+#: kdialogd.cpp:636
+msgid "File Exists"
+msgstr "Arquivo Existe"
+
+#: kdialogd.cpp:637
+msgid "Replace"
+msgstr "Sobrescrever"
+
+#: kdialogd.cpp:712
+msgid "You can only select local folders."
+msgstr "Selecione apenas pastas locais."
+
+#: kdialogd.cpp:713
+msgid "Remote Folders Not Accepted"
+msgstr "Pastas remotas não são aceitas"

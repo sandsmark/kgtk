@@ -1,0 +1,56 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-09-21 15:08+0100\n"
+"PO-Revision-Date: 2007-10-19 18:06+0200\n"
+"Last-Translator: Marco Antonio Blanco <mablanco@activasistemas.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Pootle 0.10.1\n"
+
+#: kdialogd.cpp:331
+msgid "Open"
+msgstr "Abrir"
+
+#: kdialogd.cpp:334
+msgid "Save As"
+msgstr "Guardar como"
+
+#: kdialogd.cpp:337
+msgid "Select Folder"
+msgstr "Seleccione carpeta"
+
+#: kdialogd.cpp:627
+msgid "You can only select local files."
+msgstr "Sólo se pueden seleccionar ficheros locales."
+
+#: kdialogd.cpp:628
+msgid "Remote Files Not Accepted"
+msgstr "No se aceptan ficheros remotos"
+
+#: kdialogd.cpp:634
+msgid ""
+"File %1 exits.\n"
+"Do you want to replace it?"
+msgstr ""
+"El fichero %1 existe.\n"
+"¿Quiere sustituirlo?"
+
+#: kdialogd.cpp:636
+msgid "File Exists"
+msgstr "El fichero existe"
+
+#: kdialogd.cpp:637
+msgid "Replace"
+msgstr "Sustituir"
+
+#: kdialogd.cpp:712
+msgid "You can only select local folders."
+msgstr "Sólo se pueden seleccionar carpetas locales."
+
+#: kdialogd.cpp:713
+msgid "Remote Folders Not Accepted"
+msgstr "No se aceptan carpetas remotas"

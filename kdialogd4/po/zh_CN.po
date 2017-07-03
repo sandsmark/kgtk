@@ -1,0 +1,60 @@
+# translation of kdialogd4.po to Chinese Simplified
+# Copyright (C) 2007 Free Software Foundation, Inc.
+#
+# Liang Qi <cavendish.qi@gmail.com>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: kdialogd4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-09-21 14:40+0100\n"
+"PO-Revision-Date: 2007-10-05 13:20+0200\n"
+"Last-Translator: Liang Qi <cavendish.qi@gmail.com>\n"
+"Language-Team: zh_CN <kde-china@kde.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: kdialogd.cpp:328
+msgid "Select Folder"
+msgstr "选择文件夹"
+
+#: kdialogd.cpp:573
+msgid "You can only select local files."
+msgstr "仅允许选择本地文件。"
+
+#: kdialogd.cpp:574
+msgid "Remote Files Not Accepted"
+msgstr "无法接受远程文件"
+
+#: kdialogd.cpp:580
+msgid ""
+"File %1 exits.\n"
+"Do you want to replace it?"
+msgstr ""
+"文件 %1 已经存在。\n"
+"您想替换它么？"
+
+#: kdialogd.cpp:582
+msgid "File Exists"
+msgstr "文件已存在"
+
+#: kdialogd.cpp:667
+msgid "You can only select local folders."
+msgstr "仅允许选择本地文件夹。"
+
+#: kdialogd.cpp:668
+msgid "Remote Folders Not Accepted"
+msgstr "无法接受远程文件夹"
+
+#: kdialogd.cpp:677
+msgid "KDialog Daemon"
+msgstr "KDialog 守护进程"
+
+#: kdialogd.cpp:678
+msgid "Use KDE dialogs from non-KDE apps."
+msgstr "在非 KDE 程序中使用 KDE 对话框。"
+
+#: kdialogd.cpp:680
+msgid "(c) Craig Drummond, 2006-2007"
+msgstr "(c) Craig Drummond, 2006-2007"
