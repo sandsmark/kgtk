@@ -165,14 +165,14 @@ static void urls2Local(KUrl::List &urls, QStringList &items, QWidget *parent)
 
     for(; it!=end; ++it)
     {
-        kDebug() << "URL:" << *it << " local? " << (*it).isLocalFile();
+        qDebug() << "URL:" << *it << " local? " << (*it).isLocalFile();
         if((*it).isLocalFile())
             items.append((*it).path());
         else
         {
             KUrl url(KIO::NetAccess::mostLocalUrl(*it, parent));
 
-            kDebug() << "mostLocal:" << url << " local? " << url.isLocalFile();
+            qDebug() << "mostLocal:" << url << " local? " << url.isLocalFile();
             if(url.isLocalFile())
                 items.append(url.path());
             else
@@ -219,7 +219,7 @@ KDialogD::KDialogD(QObject *parent)
             if(itsTimeoutVal<0)
                 itsTimeoutVal=DEFAULT_TIMEOUT;
         }
-        kDebug() << "Timeout:" << itsTimeoutVal;
+        qDebug() << "Timeout:" << itsTimeoutVal;
         if(itsTimeoutVal)
         {
             connect(itsTimer=new QTimer(this), SIGNAL(timeout()), this, SLOT(timeout()));
@@ -240,7 +240,7 @@ KDialogD::~KDialogD()
 
 void KDialogD::newConnection()
 {
-    kDebug() << "New connection";
+    qDebug() << "New connection";
 
     ksocklen_t         addrlen = 64;
     struct sockaddr_un clientname;
@@ -280,7 +280,7 @@ void KDialogD::newConnection()
 
 void KDialogD::deleteConnection(KDialogDClient *client)
 {
-    kDebug() << "Delete client";
+    qDebug() << "Delete client";
     client->deleteLater();
 
 #ifdef KDIALOGD_APP
@@ -301,12 +301,12 @@ void KDialogD::timeout()
     {
         if(grabLock(0)>0)   // 0=> no wait...
         {
-            kDebug() << "Timeout occured, and no connections, so exit";
+            qDebug() << "Timeout occured, and no connections, so exit";
             kapp->exit();
         }
         else     //...unlock lock file...
         {
-            kDebug() << "Timeout occured, but unable to grab lock file - app must be connecting";
+            qDebug() << "Timeout occured, but unable to grab lock file - app must be connecting";
             releaseLock();
         }
     }
@@ -321,14 +321,14 @@ KDialogDClient::KDialogDClient(int sock, const QString &an, QObject *parent)
                 itsAccepted(false),
                 itsAppName(an)
 {
-    kDebug() << "new client..." << itsAppName << " (" << itsFd << ")";
+    qDebug() << "new client..." << itsAppName << " (" << itsFd << ")";
     connect(new QSocketNotifier(itsFd, QSocketNotifier::Read, this), SIGNAL(activated(int)), this, SLOT(read()));
     connect(new QSocketNotifier(itsFd, QSocketNotifier::Exception, this), SIGNAL(activated(int)), this, SLOT(close()));
 }
 
 KDialogDClient::~KDialogDClient()
 {
-    kDebug() << "Deleted client";
+    qDebug() << "Deleted client";
     if(-1!=itsFd)
         ::close(itsFd);
     itsDlg=NULL;
@@ -338,7 +338,7 @@ KDialogDClient::~KDialogDClient()
 
 void KDialogDClient::close()
 {
-    kDebug() << "close" << itsFd;
+    qDebug() << "close" << itsFd;
 
     ::close(itsFd);
     itsFd=-1;
@@ -355,7 +355,7 @@ void KDialogDClient::close()
 
 void KDialogDClient::read()
 {
-    kDebug() << "read" << itsFd;
+    qDebug() << "read" << itsFd;
 
     if(-1==itsFd)
         return;
@@ -434,7 +434,7 @@ void KDialogDClient::read()
         }
     }
 
-    kDebug() << "Comms error, closing connection..." << itsFd;
+    qDebug() << "Comms error, closing connection..." << itsFd;
     // If we get here something was wrong, close connection...
     close();
 }
@@ -450,7 +450,7 @@ void KDialogDClient::finished()
     // * the dir select dialog doesnt seem to set the QDialog result parameter
     //   when it is accepted - so for this reason if ok is clicked we store an
     //   'accepted' value there, and check for that after the dialog is finished.
-    kDebug() << "finished " << (void *)itsDlg << itsAccepted << (itsDlg ? QDialog::Accepted==itsDlg->result() : false);
+    qDebug() << "finished " << (void *)itsDlg << itsAccepted << (itsDlg ? QDialog::Accepted==itsDlg->result() : false);
 
     if(itsDlg && !(itsAccepted || QDialog::Accepted==itsDlg->result()))
         cancel();
@@ -458,7 +458,7 @@ void KDialogDClient::finished()
 
 void KDialogDClient::ok(const QStringList &items)
 {
-    kDebug() << "ok";
+    qDebug() << "ok";
 
     int                        num=items.count();
     QStringList::ConstIterator it(items.begin()),
@@ -467,7 +467,7 @@ void KDialogDClient::ok(const QStringList &items)
 
     for(; !error && it!=end; ++it)
     {
-        kDebug() << "writeString " << *it;
+        qDebug() << "writeString " << *it;
         error=!writeString(*it);
     }
 
@@ -482,17 +482,17 @@ void KDialogDClient::ok(const QStringList &items)
 
 void KDialogDClient::cancel()
 {
-    kDebug() << "cancel";
+    qDebug() << "cancel";
 
     if(itsDlg)
     {
-        kDebug() << "send cancel";
+        qDebug() << "send cancel";
 
         int rv=0;
 
         if(!writeData((char *)&rv, 4))
         {
-            kDebug() << "failed to write data!";
+            qDebug() << "failed to write data!";
             close();
         }
         if(itsDlg)
@@ -503,14 +503,14 @@ void KDialogDClient::cancel()
 
 bool KDialogDClient::readData(QByteArray &buffer, int size)
 {
-    kDebug() << "readData" << itsFd;
+    qDebug() << "readData" << itsFd;
     buffer.resize(size);
     return ::readBlock(itsFd, buffer.data(), size);
 }
 
 bool KDialogDClient::readString(QString &str)
 {
-    kDebug() << "readString" << itsFd;
+    qDebug() << "readString" << itsFd;
 
     int size;
 
@@ -529,7 +529,7 @@ bool KDialogDClient::readString(QString &str)
 
 bool KDialogDClient::writeString(const QString &str)
 {
-    kDebug() << "writeString" << itsFd;
+    qDebug() << "writeString" << itsFd;
 
     QByteArray utf8(str.toUtf8());
 
@@ -540,7 +540,7 @@ bool KDialogDClient::writeString(const QString &str)
 
 void KDialogDClient::initDialog(const QString &caption, QDialog *d)
 {
-    kDebug() << "initDialog" << itsFd;
+    qDebug() << "initDialog" << itsFd;
 
     itsAccepted=false;
     itsDlg=d;
@@ -614,10 +614,10 @@ bool KDialogDClient::eventFilter(QObject *object, QEvent *event)
 //         if(XGetWindowProperty(QX11Info::display(), itsXid, prop, 0, 0x7FFFFFFF, False, XA_CARDINAL,
 //                               &typeRet, &formatRet, &num, &afterRet, (unsigned char **)&data))
 //         {
-//             kDebug() << "GOT ICON!!!";
+//             qDebug() << "GOT ICON!!!";
 //         }
 //         else
-//             kDebug() << "FAILED TO GET ICON!!!";
+//             qDebug() << "FAILED TO GET ICON!!!";
 #endif
         itsDlg->removeEventFilter(this);
     }
@@ -635,7 +635,7 @@ KDialogDFileDialog::KDialogDFileDialog(QString &an, Operation op, const QString 
 {
     setModal(false);
 //     setSelection(startDir);
-    kDebug() << "startDir:" << startDir;
+    qDebug() << "startDir:" << startDir;
 
     switch(op)
     {
@@ -703,7 +703,7 @@ void KDialogDFileDialog::accept()
 {
     fileWidget()->accept();
 
-    kDebug() << "KDialogDFileDialog::slotOk" << selectedUrls().count() << ' ' << mode() << ' ' << selectedUrl();
+    qDebug() << "KDialogDFileDialog::slotOk" << selectedUrls().count() << ' ' << mode() << ' ' << selectedUrl();
     KUrl::List  urls(selectedUrls());
     QStringList items;
     bool        good=true;
@@ -763,7 +763,7 @@ void KDialogDFileDialog::accept()
 
 KDialogDFileDialog::~KDialogDFileDialog()
 {
-    kDebug() << "~KDialogDFileDialog";
+    qDebug() << "~KDialogDFileDialog";
 
     if(KDialogD::config())
     {
@@ -781,7 +781,7 @@ KDialogDDirSelectDialog::KDialogDDirSelectDialog(QString &an, const QString &sta
                                           localOnly, parent),
                          itsAppName(an)
 {
-    kDebug() << "startDir:" << startDir;
+    qDebug() << "startDir:" << startDir;
 
     setModal(false);
     if(KDialogD::config())
@@ -795,7 +795,7 @@ KDialogDDirSelectDialog::KDialogDDirSelectDialog(QString &an, const QString &sta
 
 KDialogDDirSelectDialog::~KDialogDDirSelectDialog()
 {
-    kDebug() << "~KDialogDDirSelectDialog";
+    qDebug() << "~KDialogDDirSelectDialog";
 
     if(KDialogD::config())
     {
@@ -808,7 +808,7 @@ KDialogDDirSelectDialog::~KDialogDDirSelectDialog()
 
 void KDialogDDirSelectDialog::slotOk()
 {
-    kDebug() << "KDialogDDirSelectDialog::slotOk";
+    qDebug() << "KDialogDDirSelectDialog::slotOk";
 
     KUrl::List  urls;
     QStringList items;
