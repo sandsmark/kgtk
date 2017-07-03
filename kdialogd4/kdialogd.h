@@ -94,13 +94,13 @@ class KDialogDClient : public QObject
     bool writeData(const char *buffer, int size) { return writeBlock(itsFd, buffer, size); }
     bool readString(QString &str);
     bool writeString(const QString &str);
-    void initDialog(const QString &caption, KDialog *d);
+    void initDialog(const QString &caption, QDialog *d);
     bool eventFilter(QObject *object, QEvent *event);
 
     private:
 
     int          itsFd;
-    KDialog      *itsDlg;
+    QDialog      *itsDlg;
     unsigned int itsXid;
     bool         itsAccepted;
     QString      itsAppName;

@@ -201,7 +201,7 @@ static int lockFd=-1;
 
 #define LOCK_EXT ".lock"
 
-const char * getLockName()
+static const char * getLockName()
 {
     static char *lockName=NULL;
 

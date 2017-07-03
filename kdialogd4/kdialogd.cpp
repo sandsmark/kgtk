@@ -24,18 +24,21 @@
 #define USE_KWIN
 
 #include "kdialogd.h"
+#include <kdialog.h>
 #include <iostream>
 #include <kdiroperator.h>
 #include <kuniqueapplication.h>
 #include <QtCore/QSocketNotifier>
-#include <QtGui/QX11Info>
-#include <QtGui/QBoxLayout>
-#include <QtGui/QCheckBox>
+#include <QX11Info>
+#include <QBoxLayout>
+#include <QCheckBox>
 #include <kio/netaccess.h>
 #include <kmessagebox.h>
 #include <klocale.h>
 #include <kconfig.h>
 #include <kurlcombobox.h>
+#include <kurl.h>
+#include <kconfiggroup.h>
 #include <kfilewidget.h>
 #include <kfilefiltercombo.h>
 #ifdef USE_KWIN
@@ -54,7 +57,7 @@
 #ifdef KDIALOGD_APP
 #include <QtCore/QTimer>
 #include <kcmdlineargs.h>
-#include <kaboutdata.h>
+#include <k4aboutdata.h>
 #endif
 #include <fstream>
 
@@ -342,7 +345,7 @@ void KDialogDClient::close()
     if(itsDlg)
     {
         itsDlg->close();
-        itsDlg->delayedDestruct();
+        itsDlg->deleteLater();
         itsDlg=NULL;
         itsXid=0;
     }
@@ -473,7 +476,7 @@ void KDialogDClient::ok(const QStringList &items)
     else
         itsAccepted=true;
     if(itsDlg)
-        itsDlg->delayedDestruct();
+        itsDlg->deleteLater();
     itsDlg=NULL;
 }
 
@@ -493,7 +496,7 @@ void KDialogDClient::cancel()
             close();
         }
         if(itsDlg)
-            itsDlg->delayedDestruct();
+            itsDlg->deleteLater();
         itsDlg=NULL;
     }
 }
@@ -535,7 +538,7 @@ bool KDialogDClient::writeString(const QString &str)
     return writeData((char *)&size, 4) && writeData(utf8.data(), size);
 }
 
-void KDialogDClient::initDialog(const QString &caption, KDialog *d)
+void KDialogDClient::initDialog(const QString &caption, QDialog *d)
 {
     kDebug() << "initDialog" << itsFd;
 
@@ -543,7 +546,7 @@ void KDialogDClient::initDialog(const QString &caption, KDialog *d)
     itsDlg=d;
 
     if(!caption.isEmpty())
-        itsDlg->setPlainCaption(caption);
+        itsDlg->setWindowTitle(caption);
 
     if(itsXid)
         itsDlg->installEventFilter(this);
@@ -700,7 +703,7 @@ void KDialogDFileDialog::accept()
 {
     fileWidget()->accept();
 
-    kDebug() << "KDialogDFileDialog::slotOk" << selectedUrls().count() << ' ' << mode() << ' ' << selectedUrl().prettyUrl();
+    kDebug() << "KDialogDFileDialog::slotOk" << selectedUrls().count() << ' ' << mode() << ' ' << selectedUrl();
     KUrl::List  urls(selectedUrls());
     QStringList items;
     bool        good=true;
@@ -824,9 +827,9 @@ void KDialogDDirSelectDialog::slotOk()
 }
 
 #ifdef KDIALOGD_APP
-static KAboutData aboutData("kdialogd4", "kdialogd4", ki18n("KDialog Daemon"), VERSION,
+static K4AboutData aboutData("kdialogd4", "kdialogd4", ki18n("KDialog Daemon"), VERSION,
                             ki18n("Use KDE dialogs from non-KDE apps."),
-                            KAboutData::License_GPL,
+                            K4AboutData::License_GPL,
                             ki18n("(c) Craig Drummond, 2006-2007"));
 
 int main(int argc, char **argv)
@@ -861,6 +864,3 @@ KDialogDKDED::KDialogDKDED()
     new KDialogD(this);
 }
 #endif
-
-#include "kdialogd.moc"
-
