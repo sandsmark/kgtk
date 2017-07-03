@@ -502,7 +502,7 @@ static gboolean kgtkInit(const char *appName)
 
         initialised=TRUE;
         kgtkAppName=getAppName(appName);
-        useKde=NULL!=getenv("KDE_FULL_SESSION") && connectToKDialogD(kgtkAppName);
+        useKde=connectToKDialogD(kgtkAppName);
         if(useKde)
         {
             const gchar *prg=getAppName(NULL);
