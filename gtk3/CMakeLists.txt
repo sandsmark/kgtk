@@ -11,6 +11,7 @@ if (GTK3_FOUND)
     include_directories (${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/common ${CMAKE_BINARY_DIR} ${GTK3_INCLUDE_DIRS})
     set(kgtk3_SRCS ../gtk2/kgtk.c)
     add_library(kgtk3 SHARED ${kgtk3_SRCS})
+    set_target_properties(kgtk3 PROPERTIES C_VISIBILITY_PRESET default)
     target_link_libraries(kgtk3 ${GTK3_LDFLAGS} -lgthread-2.0 -lglib-2.0 -lc -ldl)
 
     install(TARGETS kgtk3 LIBRARY DESTINATION ${LIB_INSTALL_DIR}/kgtk )

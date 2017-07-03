@@ -10,7 +10,9 @@ if (GTK2_FOUND)
 
     include_directories (${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/common ${CMAKE_BINARY_DIR} ${GTK2_INCLUDE_DIRS})
     set(kgtk2_SRCS kgtk.c)
+
     add_library(kgtk2 SHARED ${kgtk2_SRCS})
+    set_target_properties(kgtk2 PROPERTIES C_VISIBILITY_PRESET default)
     target_link_libraries(kgtk2 ${GTK2_LDFLAGS} -lgthread-2.0 -lglib-2.0 -lc -ldl)
 
     install(TARGETS kgtk2 LIBRARY DESTINATION ${LIB_INSTALL_DIR}/kgtk )
