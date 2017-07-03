@@ -42,14 +42,14 @@ if [ $useApp -eq 1 ] ; then
    PATH=$oldPath
 fi
 
-toolkit=`kreadconfig --file kgtkrc --group 'Apps' --key "$app"`
+toolkit=`kreadconfig5 --file kgtkrc --group 'Apps' --key "$app"`
 
 if [ "$toolkit" = "" ] ; then
     case $app in
         libreoffice | lowriter | localc | lobase | lodraw | loffice | lomath | loweb)
             export OOO_FORCE_DESKTOP=gnome
             toolkit="gtk2" ;;
-        eclipse | gimp | inkscape | firefox | kino | iceweasel | swiftfox | azureus | mozilla* | thunderbird)
+        eclipse | gimp | inkscape | kino | iceweasel | swiftfox | azureus | mozilla* | thunderbird)
             toolkit="gtk2" ;;
         abiword) # Non-working
             toolkit="x" ;;
