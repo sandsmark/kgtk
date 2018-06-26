@@ -1,13 +1,13 @@
-# translation of kdialogd4.po to Deutsch
+# translation of kdialogd5.po to Deutsch
 # This file is put in the public domain.
 #
 # Jannick Kuhr <opensource@kuhr.org>, 2007.
 msgid ""
 msgstr ""
-"Project-Id-Version: kdialogd4\n"
+"Project-Id-Version: kdialogd5\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2007-09-21 15:08+0100\n"
-"PO-Revision-Date: 2007-10-11 13:28+0200\n"
+"PO-Revision-Date: 2018-06-26 20:00+0100\n"
 "Last-Translator: Jannick Kuhr <opensource@kuhr.org>\n"
 "Language-Team: Deutsch <kde-i18n-de@kde.org>\n"
 "MIME-Version: 1.0\n"

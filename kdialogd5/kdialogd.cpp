@@ -207,7 +207,7 @@ KDialogD::KDialogD(QObject *parent)
             f.close();
         }
         if(!theirConfig)
-            theirConfig=new KConfig("kdialogd4rc"); // , KConfig::OnlyLocal);
+            theirConfig=new KConfig("kdialogd5rc"); // , KConfig::OnlyLocal);
 
         connect(new QSocketNotifier(itsFd, QSocketNotifier::Read, this),
                 SIGNAL(activated(int)), this, SLOT(newConnection()));
@@ -827,7 +827,7 @@ void KDialogDDirSelectDialog::slotOk()
 }
 
 #ifdef KDIALOGD_APP
-static K4AboutData aboutData("kdialogd4", "kdialogd4", ki18n("KDialog Daemon"), VERSION,
+static K4AboutData aboutData("kdialogd5", "kdialogd5", ki18n("KDialog Daemon"), VERSION,
                             ki18n("Use KDE dialogs from non-KDE apps."),
                             K4AboutData::License_GPL,
                             ki18n("(c) Craig Drummond, 2006-2007"));

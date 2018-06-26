@@ -1,13 +1,13 @@
-# translation of kdialogd4.po to Brazillian Portuguese
+# translation of kdialogd5.po to Brazillian Portuguese
 # This file is put in the public domain.
 #
 # Márcio Moraes <marcio.moraes@redlinks.com.br>, 2007.
 msgid ""
 msgstr ""
-"Project-Id-Version: kdialogd4\n"
+"Project-Id-Version: kdialogd5\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2007-09-21 15:08+0100\n"
-"PO-Revision-Date: 2008-02-26 11:47-0300\n"
+"PO-Revision-Date: 2018-06-26 20:01+0100\n"
 "Last-Translator: Márcio Moraes <marcio.moraes@redlinks.com.br>\n"
 "Language-Team: Márcio Moraes <marcio.moraes@redlinks.com.br>\n"
 "MIME-Version: 1.0\n"

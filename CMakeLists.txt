@@ -58,7 +58,7 @@ endif(LIBDLVSYM_LIBRARY)
 
 add_subdirectory(gtk2)
 add_subdirectory(gtk3)
-add_subdirectory(kdialogd4)
+add_subdirectory(kdialogd5)
 
 message("** INFORMATION: Using installation prefix: ${CMAKE_INSTALL_PREFIX}")
 configure_file (config.h.cmake ${CMAKE_BINARY_DIR}/config.h)

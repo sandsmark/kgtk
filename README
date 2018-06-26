@@ -2,11 +2,11 @@ Introduction
 ------------
 
 KGtk is a quick-n-dirty *HACK* to allow *some* Gtk2, and Gtk3, applications
-to use KDE4 file dialogs.
+to use KDE Frameworks 5 file dialogs.
 
 KGtk is composed of the following pieces:
 
-1. An application called kdialogd4. This is the KDE app that will show the
+1. An application called kdialogd5. This is the KDE app that will show the
    file selector.
 2. LD_PRELOAD libraries that are used to override the Gtk2 and Gtk3 file
    dialogs.

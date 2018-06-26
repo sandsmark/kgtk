@@ -9,13 +9,13 @@ if (GTK2_FOUND)
     set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}  CACHE PATH "The subdirectory relative to the install prefix where libraries will be installed (default is /lib${LIB_SUFFIX})" FORCE)
 
     include_directories (${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_SOURCE_DIR}/common ${CMAKE_BINARY_DIR} ${GTK2_INCLUDE_DIRS})
-    set(kgtk2_SRCS kgtk.c)
+    set(kgtk2_SRCS ../common/kgtk.c)
 
     add_library(kgtk2 SHARED ${kgtk2_SRCS})
-    set_target_properties(kgtk2 PROPERTIES C_VISIBILITY_PRESET default)
+    set_target_properties(kgtk2 PROPERTIES C_VISIBILITY_PRESET default SOVERSION "5")
     target_link_libraries(kgtk2 ${GTK2_LDFLAGS} -lgthread-2.0 -lglib-2.0 -lc -ldl)
 
-    install(TARGETS kgtk2 LIBRARY DESTINATION ${LIB_INSTALL_DIR}/kgtk )
+    install(TARGETS kgtk2 LIBRARY DESTINATION ${LIB_INSTALL_DIR}/kgtk NAMELINK_SKIP)
 else (GTK2_FOUND)
     message("** ERROR      : Could not locate Gtk2 headers, Gtk2 LD_PRELOAD library will not be built.")
 endif (GTK2_FOUND)

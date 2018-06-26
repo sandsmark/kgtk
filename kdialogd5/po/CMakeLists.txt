@@ -8,7 +8,7 @@ foreach(_file ${_pofiles})
     set(_out "${CMAKE_CURRENT_BINARY_DIR}/${_file_we}.gmo")
     set(_in "${_file_we}.po")
     add_custom_command(OUTPUT ${_out} COMMAND ${MSGFMT_EXECUTABLE} -o ${_out} ${_file} DEPENDS ${_file})
-    install(FILES ${_out} DESTINATION share/locale/${_file_we}/LC_MESSAGES/ RENAME kdialogd4.mo)
+    install(FILES ${_out} DESTINATION share/locale/${_file_we}/LC_MESSAGES/ RENAME kdialogd5.mo)
     set(_outputs ${_outputs} ${_out})
 endforeach(_file)
 
@@ -16,7 +16,7 @@ add_custom_target(pofiles ALL DEPENDS ${_outputs})
 
 # Stuff to generate the .pot
 set(POT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/../kdialogd.cpp)
-set(POT_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/kdialogd4.pot)
+set(POT_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/kdialogd5.pot)
 
 # Find xgettext
 find_program(XGETTEXT_PATH NAMES "xgettext" PATHS "/usr/bin" "/usr/local/bin")
