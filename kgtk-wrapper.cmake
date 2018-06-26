@@ -14,6 +14,18 @@
 # be used when launching the app
 #
 
+set -x
+case "$KDE_SESSION_VERSION"
+in
+5)	KRC="kreadconfig${KDE_SESSION_VERSION}"
+	LIBSUFF=".${KDE_SESSION_VERSION}"
+	;;
+
+*)	KRC="kreadconfig"
+	LIBSUFF=""
+	;;
+esac
+
 if [ "`locale | grep 'LANG=' | grep -i 'utf-8' | wc -l`" = "0" ] ; then
     export G_BROKEN_FILENAMES=1
 fi
@@ -23,6 +35,7 @@ useApp=1
 
 if [ "$app" = "kgtk-wrapper" ] ; then
     app=`basename $1`
+    shift
     useApp=0
 fi
 
@@ -32,17 +45,23 @@ if [ $useApp -eq 1 ] ; then
     PATH=`echo $PATH | sed s:$dir::g | sed "s|::*|:|g"`
 fi
 
-realApp=`which $app`
+case "$app"
+in
+/*)	realApp=$app
+	;;
 
-if [ -z $realApp ] ; then
-    realApp=`which ./$app`
-fi
+*)	realApp=`which $app`
+	if [ -z $realApp ] ; then
+		realApp=`which ./$app`
+	fi
+	;;
+esac
 
 if [ $useApp -eq 1 ] ; then
    PATH=$oldPath
 fi
 
-toolkit=`kreadconfig5 --file kgtkrc --group 'Apps' --key "$app"`
+toolkit=`$KRC --file kgtkrc --group 'Apps' --key "$app"`
 
 if [ "$toolkit" = "" ] ; then
     case $app in
@@ -73,16 +92,17 @@ if [ "$toolkit" = "x" ] ; then
     toolkit=""
 fi
 
-if [ ! -f "@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libk${toolkit}.so" ] ; then
+if [ ! -f "@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libk${toolkit}.so${LIBSUFF}" ] ; then
     if [ $useApp -eq 1 ] ; then
-        $realApp "$@"
+        exec $realApp "$@"
     else
-        "$@"
+        exec "$@"
     fi
 else
-    if [ "$useApp" ] && [ "`dirname $realApp`" != "$dir" ] ; then
-        LD_PRELOAD=@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libk${toolkit}.so:$LD_PRELOAD $realApp "$@"
+    export LD_PRELOAD=@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libk${toolkit}.so${LIBSUFF}:$LD_PRELOAD
+    if [ -n "$useApp" ] && [ "`dirname $realApp`" != "$dir" ] ; then
+	exec $realApp "$@"
     else
-        LD_PRELOAD=@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libk${toolkit}.so:$LD_PRELOAD "$@"
+        exec "$@"
     fi
 fi

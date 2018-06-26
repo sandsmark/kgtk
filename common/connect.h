@@ -291,7 +291,7 @@ static kgtk_bool connectToKDialogD(const char *appName)
 #ifdef KDIALOGD_APP
         grabLock(5);
 #ifdef KGTK_USE_SYSTEM_CALL
-        system(KDIALOGD_LOCATION"/kdialogd4 &");
+        system(KDIALOGD_LOCATION"/kdialogd5 &");
 #else
         switch(fork())
         {
@@ -300,7 +300,7 @@ static kgtk_bool connectToKDialogD(const char *appName)
                 printf("ERROR: Could not start fork :-(\n");
                 break;
             case 0:
-                execl(KDIALOGD_LOCATION"/kdialogd4", "kdialogd4", (char *)NULL);
+                execl(KDIALOGD_LOCATION"/kdialogd5", "kdialogd5", (char *)NULL);
                 break;
             default:
             {

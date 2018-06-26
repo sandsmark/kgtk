@@ -9,7 +9,7 @@ for app in extractrc xgettext msgmerge ; do
 done
 
 BASEDIR=".." # root of translatable sources
-PROJECT="kdialogd4" # project name
+PROJECT="kdialogd5" # project name
 BUGADDR="" # MSGID-Bugs
 WDIR=`pwd` # working dir
 echo "Preparing rc files"
