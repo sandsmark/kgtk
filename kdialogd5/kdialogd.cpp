@@ -551,9 +551,8 @@ void KDialogDClient::initDialog(const QString &caption, QDialog *d)
     if(itsXid)
         itsDlg->installEventFilter(this);
 
-    connect(itsDlg, SIGNAL(okClicked()), itsDlg, SLOT(slotOk()));
     connect(itsDlg, SIGNAL(ok(const QStringList &)), this, SLOT(ok(const QStringList &)));
-    connect(itsDlg, SIGNAL(finished()), this, SLOT(finished()));
+    connect(itsDlg, SIGNAL(finished(int)), this, SLOT(finished()));
     itsDlg->show();
 }
 
