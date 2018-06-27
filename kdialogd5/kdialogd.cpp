@@ -266,6 +266,7 @@ void KDialogD::newConnection()
             if(ok)
             {
                 itsNumConnections++;
+                qDebug() << "now have" << itsNumConnections << "connections";
 #ifdef KDIALOGD_APP
                 if(itsTimer)
                     itsTimer->stop();
@@ -286,11 +287,13 @@ void KDialogD::deleteConnection(KDialogDClient *client)
 #ifdef KDIALOGD_APP
     if(0==--itsNumConnections)
     {
+        qDebug() << "no connections, starting timer";
         if(itsTimeoutVal)
             itsTimer->start(itsTimeoutVal*1000);  // Only single shot...
         else
             timeout();
     }
+    else qDebug() << "still have" << itsNumConnections << "connections";
 #endif
 }
 
@@ -301,12 +304,12 @@ void KDialogD::timeout()
     {
         if(grabLock(0)>0)   // 0=> no wait...
         {
-            qDebug() << "Timeout occured, and no connections, so exit";
+            qDebug() << "Timeout and no connections, so exit";
             kapp->exit();
         }
         else     //...unlock lock file...
         {
-            qDebug() << "Timeout occured, but unable to grab lock file - app must be connecting";
+            qDebug() << "Timeout, but unable to grab lock file - app must be connecting";
             releaseLock();
         }
     }
@@ -328,7 +331,7 @@ KDialogDClient::KDialogDClient(int sock, const QString &an, QObject *parent)
 
 KDialogDClient::~KDialogDClient()
 {
-    qDebug() << "Deleted client";
+    qDebug() << "Deleted client" << itsAppName;
     if(-1!=itsFd)
         ::close(itsFd);
     itsDlg=NULL;
@@ -340,8 +343,6 @@ void KDialogDClient::close()
 {
     qDebug() << "close" << itsFd;
 
-    ::close(itsFd);
-    itsFd=-1;
     if(itsDlg)
     {
         itsDlg->close();
@@ -350,7 +351,12 @@ void KDialogDClient::close()
         itsXid=0;
     }
 
-    emit error(this);
+    if (itsFd!=-1)
+    {
+        ::close(itsFd);
+        itsFd=-1;
+        emit error(this);
+    }
 }
 
 void KDialogDClient::read()
