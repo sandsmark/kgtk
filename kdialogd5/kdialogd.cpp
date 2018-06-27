@@ -564,6 +564,8 @@ bool KDialogDClient::eventFilter(QObject *object, QEvent *event)
         KWindowSystem::setMainWindow(itsDlg, itsXid);
         KWindowSystem::setState(itsDlg->winId(), NET::Modal|NET::SkipTaskbar|NET::SkipPager);
 
+        itsDlg->activateWindow();
+        itsDlg->raise();
 #if 0
         KWindowInfo wi(KWindowSystem::windowInfo(itsXid, NET::WMGeometry, NET::WM2UserTime));
         QRect       geom(wi.geometry());
