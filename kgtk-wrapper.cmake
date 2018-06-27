@@ -14,7 +14,6 @@
 # be used when launching the app
 #
 
-set -x
 case "$KDE_SESSION_VERSION"
 in
 5)	KRC="kreadconfig${KDE_SESSION_VERSION}"
