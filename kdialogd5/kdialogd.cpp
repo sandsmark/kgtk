@@ -32,12 +32,12 @@
 #include <QX11Info>
 #include <QBoxLayout>
 #include <QCheckBox>
+#include <QUrl>
 #include <kio/netaccess.h>
 #include <kmessagebox.h>
 #include <klocale.h>
 #include <kconfig.h>
 #include <kurlcombobox.h>
-#include <kurl.h>
 #include <kconfiggroup.h>
 #include <kfilewidget.h>
 #include <kfilefiltercombo.h>
@@ -55,9 +55,9 @@
 #include <kdebug.h>
 #include <kdeversion.h>
 #ifdef KDIALOGD_APP
-#include <QtCore/QTimer>
-#include <kcmdlineargs.h>
-#include <k4aboutdata.h>
+#include <QTimer>
+#include <QCommandLineParser>
+#include <kdbusservice.h>
 #endif
 #include <fstream>
 
@@ -158,27 +158,22 @@ static int createSocket()
     return socketFd;
 }
 
-static void urls2Local(KUrl::List &urls, QStringList &items, QWidget *parent)
+static QStringList urls2Local(const QList<QUrl> &urls, QWidget *parent)
 {
-    KUrl::List::Iterator it(urls.begin()),
-                         end(urls.end());
-
-    for(; it!=end; ++it)
+    QStringList items;
+    foreach (const QUrl &url, urls)
     {
-        qDebug() << "URL:" << *it << " local? " << (*it).isLocalFile();
-        if((*it).isLocalFile())
-            items.append((*it).path());
+        qDebug() << "URL" << url << " local? " << url.isLocalFile();
+        if (url.isLocalFile()) items.append(url.path());
         else
         {
-            KUrl url(KIO::NetAccess::mostLocalUrl(*it, parent));
-
-            qDebug() << "mostLocal:" << url << " local? " << url.isLocalFile();
-            if(url.isLocalFile())
-                items.append(url.path());
-            else
-                break;
+            const QUrl localUrl = KIO::NetAccess::mostLocalUrl(url, parent);
+            qDebug() << "mostLocal" << localUrl << "local?" << localUrl.isLocalFile();
+            if (localUrl.isLocalFile()) items.append(localUrl.path());
+            else break;
         }
     }
+    return items;
 }
 
 KDialogD::KDialogD(QObject *parent)
@@ -634,7 +629,7 @@ bool KDialogDClient::eventFilter(QObject *object, QEvent *event)
 
 KDialogDFileDialog::KDialogDFileDialog(QString &an, Operation op, const QString &startDir,
                                        const QString &filter, const QString &customWidgets, bool confirmOw)
-                  : KFileDialog(KUrl(startDir.isEmpty() || "~"==startDir ? QDir::homePath() : startDir),
+                  : KFileDialog(QUrl(startDir.isEmpty() || "~"==startDir ? QDir::homePath() : startDir),
                                 filter, NULL),
                     itsConfirmOw(confirmOw),
                     itsDone(false),
@@ -711,13 +706,12 @@ void KDialogDFileDialog::accept()
     fileWidget()->accept();
 
     qDebug() << "KDialogDFileDialog::slotOk" << selectedUrls().count() << ' ' << mode() << ' ' << selectedUrl();
-    KUrl::List  urls(selectedUrls());
-    QStringList items;
+    QList<QUrl> urls(selectedUrls());
     bool        good=true;
 
     if(urls.count())
     {
-        urls2Local(urls, items, this);
+        QStringList items = urls2Local(urls, this);
 
         if(urls.count()!=items.count())
         {
@@ -729,7 +723,7 @@ void KDialogDFileDialog::accept()
             good=!KIO::NetAccess::exists(urls.first(), KIO::NetAccess::DestinationSide, this) ||
                  KMessageBox::Continue==KMessageBox::warningContinueCancel(this,
                                             i18n("File %1 exits.\nDo you want to replace it?")
-                                                 .arg(urls.first().prettyUrl()),
+                                                                           .arg(urls.first().toDisplayString()),
                                             i18n("File Exists"),
                                             KGuiItem(i18n("Replace"), "filesaveas"), KStandardGuiItem::cancel(), QString(),
                                             KMessageBox::Notify|KMessageBox::PlainCaption);
@@ -783,7 +777,7 @@ KDialogDFileDialog::~KDialogDFileDialog()
 
 KDialogDDirSelectDialog::KDialogDDirSelectDialog(QString &an, const QString &startDir, bool localOnly,
                                                  QWidget *parent)
-                       : KDirSelectDialog(KUrl(startDir.isEmpty() || "~"==startDir
+                       : KDirSelectDialog(QUrl(startDir.isEmpty() || "~"==startDir
                                                    ? QDir::homePath() : startDir),
                                           localOnly, parent),
                          itsAppName(an)
@@ -817,11 +811,9 @@ void KDialogDDirSelectDialog::slotOk()
 {
     qDebug() << "KDialogDDirSelectDialog::slotOk";
 
-    KUrl::List  urls;
-    QStringList items;
-
+    QList<QUrl> urls;
     urls.append(url());
-    urls2Local(urls, items, this);
+    QStringList items = urls2Local(urls, this);
 
     if(urls.count()!=items.count())
             KMessageBox::sorry(this, i18n("You can only select local folders."),
@@ -834,24 +826,41 @@ void KDialogDDirSelectDialog::slotOk()
 }
 
 #ifdef KDIALOGD_APP
-static K4AboutData aboutData("kdialogd5", "kdialogd5", ki18n("KDialog Daemon"), VERSION,
-                            ki18n("Use KDE dialogs from non-KDE apps."),
-                            K4AboutData::License_GPL,
-                            ki18n("(c) Craig Drummond, 2006-2007"));
-
 int main(int argc, char **argv)
 {
-    KCmdLineArgs::init(argc, argv, &aboutData);
+    QApplication app(argc, argv);
+    app.setQuitOnLastWindowClosed(false);
 
-    KUniqueApplication *app=new KUniqueApplication;
-    KDialogD           kdialogd;
+    KAboutData about("kdialogd5",					// componentName
+                     i18n("KDialog Daemon"),				// displayName
+                     VERSION,						// version
+                     i18n("Use KDE dialogs from GTK apps."),		// shortDescription
+                     KAboutLicense::GPL,				// licenseType,
+                     i18n("(c) Craig Drummond 2006-2007"),		// copyrightStatement
+                     QString(),						// otherText
+                     i18n("https://github.com/sandsmark/kgtk"), 	// homePageAddress
+                     i18n("https://github.com/sandsmark/kgtk/issues"));	// bugAddress
 
-    QApplication::setQuitOnLastWindowClosed(false);
+    about.setOrganizationDomain("kde.org");
+    about.addAuthor(i18n("Craig Drummond"),		// name
+                    i18n("Original implementation"));	// task
+    about.addCredit(i18n("Martin Sandsmark"),		// name
+                    i18n("KF5 port"));			// task
+    about.addCredit(i18n("Jonathan Marten"),		// name
+                    i18n("KF5 port"));			// task
 
-    int rv=app->exec();
+    KAboutData::setApplicationData(about);
+    QCommandLineParser parser;
+    about.setupCommandLine(&parser);
+    parser.process(app);
+    if (parser.isSet("version")) return 0;
+    if (parser.isSet("author")) return 0;
+    if (parser.isSet("license")) return 0;
 
-    delete app;
-
+    KDBusService service(KDBusService::Unique);
+    // get here only if the first instance of the daemon
+    KDialogD kdialogd;
+    int rv = app.exec();
     unlink(getSockName());
     releaseLock();
     return rv;
