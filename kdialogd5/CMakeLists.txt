@@ -4,9 +4,11 @@ add_executable(kdialogd5_bin ${kdialogd5_bin_SRCS})
 set_target_properties(kdialogd5_bin PROPERTIES OUTPUT_NAME kdialogd5)
 
 target_link_libraries(kdialogd5_bin
+    KF5::I18n
     KF5::DBusAddons
     KF5::KIOWidgets
-    KF5::KDELibs4Support
+    KF5::WindowSystem
+    KF5::JobWidgets
     Qt5::X11Extras
     Qt5::Widgets
     Qt5::Core

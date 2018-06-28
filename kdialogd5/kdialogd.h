@@ -1,8 +1,6 @@
 #ifndef __KDIALOGD_H__
 #define __KDIALOGD_H__
 
-#include <kfile.h>
-#include <kfiledialog.h>
 #include <qfiledialog.h>
 #include "common.h"
 #include "config.h"
