@@ -35,10 +35,6 @@
 #include <time.h>
 #include "config.h"
 
-#ifdef __KDIALOGD_H__
-#include <kstandarddirs.h>
-#endif
-
 #ifdef KGTK_DEBUG
 static int kgtkDebug=0;
 #endif
@@ -81,7 +77,7 @@ static const char * getPidFileName()
 #ifdef __KDIALOGD_H__
             /* We are kdialogd - so create socket folder if it does not exist... */
             sprintf(pidfile, "%s/%s%s", tmp, PID_DIR, user);
-            KStandardDirs::makeDir(QString::fromAscii(pidfile));
+            QDir::root().mkpath(pidfile);
 #endif
 
             /* CPD: TODO get dispaly number! */
@@ -121,7 +117,7 @@ static const char * getSockName()
 #ifdef __KDIALOGD_H__
             /* We are kdialogd - so create socket folder if it does not exist... */
             sprintf(sock, "%s/%s%s", tmp, SOCK_DIR, user);
-            KStandardDirs::makeDir(QString::fromAscii(sock));
+            QDir::root().mkpath(sock);
 #endif
 
             /* CPD: TODO get dispaly number! */
