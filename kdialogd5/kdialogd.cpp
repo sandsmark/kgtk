@@ -25,21 +25,20 @@
 
 #include "kdialogd.h"
 #include <iostream>
-#include <kdiroperator.h>
-#include <kuniqueapplication.h>
+#include <kaboutdata.h>
+#include <qapplication.h>
 #include <QtCore/QSocketNotifier>
 #include <QX11Info>
 #include <QBoxLayout>
 #include <QCheckBox>
 #include <QUrl>
-#include <kio/netaccess.h>
+#include <kio/statjob.h>
+#include <kjobwidgets.h>
 #include <kmessagebox.h>
-#include <klocale.h>
+#include <klocalizedstring.h>
 #include <kconfig.h>
 #include <kurlcombobox.h>
 #include <kconfiggroup.h>
-#include <kfilewidget.h>
-#include <kfilefiltercombo.h>
 #ifdef USE_KWIN
 #include <kwindowsystem.h>
 #else
@@ -51,8 +50,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/errno.h>
-#include <kdebug.h>
-#include <kdeversion.h>
+#include <qdebug.h>
 #ifdef KDIALOGD_APP
 #include <QTimer>
 #include <QCommandLineParser>
@@ -88,20 +86,20 @@ static int createSocket()
 
     if(!stat_err && S_ISLNK(s.st_mode))
     {
-        kWarning() << "Someone is running a symlink attack on you" ;
+        qWarning() << "Someone is running a symlink attack on you" ;
         if(unlink(sock))
         {
-            kWarning() << "Could not delete symlink" ;
+            qWarning() << "Could not delete symlink" ;
             return -1;
         }
     }
 
     if (!access(sock, R_OK|W_OK))
     {
-        kWarning() << "stale socket exists" ;
+        qWarning() << "stale socket exists" ;
         if (unlink(sock))
         {
-            kWarning() << "Could not delete stale socket" ;
+            qWarning() << "Could not delete stale socket" ;
             return -1;
         }
     }
@@ -109,7 +107,7 @@ static int createSocket()
     socketFd = socket(PF_UNIX, SOCK_STREAM, 0);
     if (socketFd < 0)
     {
-        kError() << "socket(): " << strerror(errno);
+        qCritical() << "socket(): " << strerror(errno);
         return -1;
     }
 
@@ -120,7 +118,7 @@ static int createSocket()
     addrlen = SUN_LEN(&addr);
     if (bind(socketFd, (struct sockaddr *)&addr, addrlen) < 0)
     {
-        kError() << "bind(): " << strerror(errno);
+        qCritical() << "bind(): " << strerror(errno);
         return -1;
     }
 
@@ -129,7 +127,7 @@ static int createSocket()
     if (setsockopt(socketFd, SOL_SOCKET, SO_LINGER, (char *) &lin,
                    sizeof(linger)) < 0)
     {
-        kError() << "setsockopt(SO_LINGER): " << strerror(errno);
+        qCritical() << "setsockopt(SO_LINGER): " << strerror(errno);
         return -1;
     }
 
@@ -137,20 +135,20 @@ static int createSocket()
     if (setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, (char *) &opt,
                    sizeof(opt)) < 0)
     {
-        kError() << "setsockopt(SO_REUSEADDR): " << strerror(errno);
+        qCritical() << "setsockopt(SO_REUSEADDR): " << strerror(errno);
         return -1;
     }
     opt = 1;
     if (setsockopt(socketFd, SOL_SOCKET, SO_KEEPALIVE, (char *) &opt,
                    sizeof(opt)) < 0)
     {
-        kError() << "setsockopt(SO_KEEPALIVE): " << strerror(errno);
+        qCritical() << "setsockopt(SO_KEEPALIVE): " << strerror(errno);
         return -1;
     }
     chmod(sock, 0600);
     if (listen(socketFd, 1) < 0)
     {
-        kError() << "listen(): " << strerror(errno);
+        qCritical() << "listen(): " << strerror(errno);
         return -1;
     }
 
@@ -166,7 +164,10 @@ static QStringList urls2Local(const QList<QUrl> &urls, QWidget *parent)
         if (url.isLocalFile()) items.append(url.path());
         else
         {
-            const QUrl localUrl = KIO::NetAccess::mostLocalUrl(url, parent);
+            KIO::StatJob *job = KIO::mostLocalUrl(url);
+            KJobWidgets::setWindow(job, parent);
+            job->exec();
+            const QUrl localUrl = job->mostLocalUrl();
             qDebug() << "mostLocal" << localUrl << "local?" << localUrl.isLocalFile();
             if (localUrl.isLocalFile()) items.append(localUrl.path());
             else break;
@@ -186,9 +187,9 @@ KDialogD::KDialogD(QObject *parent)
 {
     if(itsFd<0)
     {
-        kError() << "KDialogD could not create socket";
+        qCritical() << "KDialogD could not create socket";
 #ifdef KDIALOGD_APP
-        kapp->exit();
+        QCoreApplication::exit(1);
 #endif
     }
     else
@@ -299,7 +300,7 @@ void KDialogD::timeout()
         if(grabLock(0)>0)   // 0=> no wait...
         {
             qDebug() << "Timeout and no connections, so exit";
-            kapp->exit();
+            QCoreApplication::exit(0);
         }
         else     //...unlock lock file...
         {
@@ -733,13 +734,21 @@ void KDialogDFileDialog::accept()
             good=false;
         }
         else if(itsConfirmOw && QFileDialog::AcceptSave==acceptMode())
-            good=!KIO::NetAccess::exists(urls.first(), KIO::NetAccess::DestinationSide, this) ||
-                 KMessageBox::Continue==KMessageBox::warningContinueCancel(this,
+        {
+            KIO::StatJob *job = KIO::stat(urls.first(), KIO::StatJob::DestinationSide, 0);
+            KJobWidgets::setWindow(job, this);
+            if (job->exec())				// destination exists
+            {
+                int result = KMessageBox::warningContinueCancel(this,
                                             i18n("File %1 exits.\nDo you want to replace it?")
                                                                            .arg(urls.first().toDisplayString()),
                                             i18n("File Exists"),
                                             KGuiItem(i18n("Replace"), "filesaveas"), KStandardGuiItem::cancel(), QString(),
                                             KMessageBox::Notify|KMessageBox::PlainCaption);
+
+                good = (result==KMessageBox::Continue);
+            }
+        }
 
         if(good)
         {

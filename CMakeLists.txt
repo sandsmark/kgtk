@@ -14,7 +14,6 @@ include(CPack)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
-# find_package(KDE4 REQUIRED)
 find_package(ECM 1.3.0 REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
 include(FeatureSummary)
@@ -25,7 +24,10 @@ include(KDECompilerSettings NO_POLICY_SCOPE)
 find_package(Qt5 REQUIRED Core Widgets X11Extras)
 find_package(KF5 REQUIRED
     KIO
-    KDELibs4Support
+    I18n
+    WindowSystem
+    DBusAddons
+    JobWidgets
     )
 
 include(CheckFunctionExists)
