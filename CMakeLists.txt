@@ -16,6 +16,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 find_package(ECM 1.3.0 REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR})
+include(ECMSetupVersion)
 include(FeatureSummary)
 include(KDEInstallDirs)
 include(KDECMakeSettings)
@@ -55,7 +56,7 @@ if(LIBDLVSYM_LIBRARY)
         list(GET DLSYM_DATA 4 KGTK_DLSYM_VERSION)
     endif(LIBDL_LIBRARY)
 else(LIBDLVSYM_LIBRARY)
-    message("** INFORMATION: You're libdl does not contain dlvsym - SWT apps will not be supported")
+    message("** INFORMATION: Your libdl does not contain dlvsym - SWT apps will not be supported")
 endif(LIBDLVSYM_LIBRARY)
 
 add_subdirectory(gtk2)
@@ -67,3 +68,5 @@ configure_file (config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 configure_file (kgtk-wrapper.cmake ${CMAKE_CURRENT_BINARY_DIR}/kgtk-wrapper @ONLY)
 
 install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/kgtk-wrapper DESTINATION bin)
+
+feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
