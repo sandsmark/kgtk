@@ -3,8 +3,7 @@
 
 #include <kfile.h>
 #include <kfiledialog.h>
-#include <kfiledialog.h>
-#include <kdirselectdialog.h>
+#include <qfiledialog.h>
 #include "common.h"
 #include "config.h"
 #include <QtCore/QMap>
@@ -17,7 +16,7 @@ class QTimer;
 class KDialog;
 class KConfig;
 
-class KDialogDFileDialog : public KFileDialog
+class KDialogDFileDialog : public QFileDialog
 {
     Q_OBJECT
 
@@ -43,7 +42,7 @@ class KDialogDFileDialog : public KFileDialog
     QMap<QString, QWidget *> itsCustom;
 };
 
-class KDialogDDirSelectDialog : public KDirSelectDialog
+class KDialogDDirSelectDialog : public QFileDialog
 {
     Q_OBJECT
 

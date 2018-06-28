@@ -24,7 +24,6 @@
 #define USE_KWIN
 
 #include "kdialogd.h"
-#include <kdialog.h>
 #include <iostream>
 #include <kdiroperator.h>
 #include <kuniqueapplication.h>
@@ -459,7 +458,7 @@ void KDialogDClient::finished()
 
 void KDialogDClient::ok(const QStringList &items)
 {
-    qDebug() << "ok";
+    qDebug();
 
     int                        num=items.count();
     QStringList::ConstIterator it(items.begin()),
@@ -483,7 +482,7 @@ void KDialogDClient::ok(const QStringList &items)
 
 void KDialogDClient::cancel()
 {
-    qDebug() << "cancel";
+    qDebug();
 
     if(itsDlg)
     {
@@ -627,49 +626,63 @@ bool KDialogDClient::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
+static QUrl resolveStartDir(const QString &startDir)
+{
+    return QUrl(startDir.isEmpty() || "~"==startDir ? QDir::homePath() : startDir);
+}
+
 KDialogDFileDialog::KDialogDFileDialog(QString &an, Operation op, const QString &startDir,
                                        const QString &filter, const QString &customWidgets, bool confirmOw)
-                  : KFileDialog(QUrl(startDir.isEmpty() || "~"==startDir ? QDir::homePath() : startDir),
-                                filter, NULL),
+                  : QFileDialog(NULL),
                     itsConfirmOw(confirmOw),
                     itsDone(false),
                     itsAppName(an)
 {
     setModal(false);
-//     setSelection(startDir);
-    qDebug() << "startDir:" << startDir;
+    if (!confirmOw) setOption(QFileDialog::DontConfirmOverwrite);
+    setDirectoryUrl(resolveStartDir(startDir));
+
+    // Need to convert the filter list from KDE to Qt format
+    const QStringList filterList = filter.split('\n');
+    QStringList qtFilters;
+    foreach (const QString &filt, filterList)
+    {
+        int idx = filt.indexOf('|');
+        if (idx!=-1) qtFilters.append(filt.mid(idx+1)+" ("+filt.left(idx)+')');
+        else qtFilters.append(filt);
+    }
+    setNameFilters(qtFilters);
 
     switch(op)
     {
         case OP_FILE_OPEN:
-            setOperationMode(KFileDialog::Opening);
-            setMode(KFile::File|KFile::ExistingOnly);
+            setAcceptMode(QFileDialog::AcceptOpen);
+            setFileMode(QFileDialog::ExistingFile);
             break;
         case OP_FILE_OPEN_MULTIPLE:
-            setOperationMode(KFileDialog::Opening);
-            setMode(KFile::Files|KFile::ExistingOnly);
+            setAcceptMode(QFileDialog::AcceptOpen);
+            setFileMode(QFileDialog::ExistingFiles);
             break;
         case OP_FILE_SAVE:
-            setOperationMode(KFileDialog::Saving);
-            setMode(KFile::File);
+            setAcceptMode(QFileDialog::AcceptSave);
+            setFileMode(QFileDialog::AnyFile);
             break;
         default:
             break;
     }
 
-    fileWidget()->locationEdit()->setUrls(QStringList());
     if(KDialogD::config())
     {
         KConfigGroup cfg(KDialogD::config(), groupName(itsAppName));
 
-        fileWidget()->locationEdit()->setUrls(cfg.readEntry(CFG_KEY_URLS, QStringList()));
+        selectUrl(cfg.readEntry(CFG_KEY_URLS, QStringList()).value(0));
         resize(cfg.readEntry(CFG_KEY_DIALOG_SIZE, QSize(600, 400)));
     }
 
-    fileWidget()->filterWidget()->setEditable(false);
-    
     if(!customWidgets.isEmpty())
     {
+        qWarning() << "Client" << itsAppName << "requests custom widgets, which are not currently supported";
+
         QWidget *custom=0L;
         QBoxLayout *layout=0;
         QStringList widgets=customWidgets.split("@@", QString::SkipEmptyParts);
@@ -687,7 +700,6 @@ KDialogDFileDialog::KDialogDFileDialog(QString &an, Operation op, const QString 
                     custom=new QWidget();
                     layout=new QBoxLayout(QBoxLayout::TopToBottom, custom);
                     layout->setMargin(0);
-                    layout->setSpacing(KDialog::spacingHint());
                 }
                 QCheckBox *cb=new QCheckBox(name, custom);
                 cb->setChecked("true"==parts[1]);
@@ -696,17 +708,18 @@ KDialogDFileDialog::KDialogDFileDialog(QString &an, Operation op, const QString 
             }
         }
         
-        if(custom)
-            fileWidget()->setCustomWidget(QString(), custom);
+        // TODO: support for custom widgets
+        //if(custom)
+        //    fileWidget()->setCustomWidget(QString(), custom);
     }
 }
 
 void KDialogDFileDialog::accept()
 {
-    fileWidget()->accept();
+    QFileDialog::accept();
 
-    qDebug() << "KDialogDFileDialog::slotOk" << selectedUrls().count() << ' ' << mode() << ' ' << selectedUrl();
     QList<QUrl> urls(selectedUrls());
+    qDebug() << urls.count() << acceptMode() << urls;
     bool        good=true;
 
     if(urls.count())
@@ -719,7 +732,7 @@ void KDialogDFileDialog::accept()
                                i18n("Remote Files Not Accepted"));
             good=false;
         }
-        else if(itsConfirmOw && KFileDialog::Saving==operationMode())
+        else if(itsConfirmOw && QFileDialog::AcceptSave==acceptMode())
             good=!KIO::NetAccess::exists(urls.first(), KIO::NetAccess::DestinationSide, this) ||
                  KMessageBox::Continue==KMessageBox::warningContinueCancel(this,
                                             i18n("File %1 exits.\nDo you want to replace it?")
@@ -730,13 +743,16 @@ void KDialogDFileDialog::accept()
 
         if(good)
         {
-            QString filter(currentFilter());
-
+            QString filter = selectedNameFilter();
             if(!filter.isEmpty())
             {
-                QString name=fileWidget()->filterWidget()->currentText();
-                if(!name.isEmpty())
-                    filter=filter+"|"+name;
+                // Convert the Qt format filter back to KDE format
+                int idx = filter.lastIndexOf(" (");
+                if (idx!=-1)
+                {
+                    if (filter.endsWith(')')) filter.chop(1);
+                    filter = filter.mid(idx+2)+'|'+filter.left(idx);
+                }
                 items.append(filter);
             }
 
@@ -755,7 +771,6 @@ void KDialogDFileDialog::accept()
             
             emit ok(items);
             hide();
-            //KFileDialog::accept();
        }
        else
             setResult(QDialog::Rejected);
@@ -764,27 +779,29 @@ void KDialogDFileDialog::accept()
 
 KDialogDFileDialog::~KDialogDFileDialog()
 {
-    qDebug() << "~KDialogDFileDialog";
+    qDebug();
 
     if(KDialogD::config())
     {
         KConfigGroup cfg(KDialogD::config(), groupName(itsAppName));
 
-        cfg.writeEntry(CFG_KEY_URLS, fileWidget()->locationEdit()->urls());
+        cfg.writeEntry(CFG_KEY_URLS, selectedUrls());
         cfg.writeEntry(CFG_KEY_DIALOG_SIZE, size());
     }
 }
 
 KDialogDDirSelectDialog::KDialogDDirSelectDialog(QString &an, const QString &startDir, bool localOnly,
                                                  QWidget *parent)
-                       : KDirSelectDialog(QUrl(startDir.isEmpty() || "~"==startDir
-                                                   ? QDir::homePath() : startDir),
-                                          localOnly, parent),
+                       : QFileDialog(parent),
                          itsAppName(an)
 {
-    qDebug() << "startDir:" << startDir;
-
     setModal(false);
+    setAcceptMode(QFileDialog::AcceptOpen);
+    setFileMode(QFileDialog::Directory);
+    setOption(QFileDialog::ShowDirsOnly);
+    setDirectoryUrl(resolveStartDir(startDir));
+    if (localOnly) setSupportedSchemes(QStringList() << "file");
+
     if(KDialogD::config())
     {
         KConfigGroup cfg(KDialogD::config(), groupName(itsAppName, false));
@@ -796,7 +813,7 @@ KDialogDDirSelectDialog::KDialogDDirSelectDialog(QString &an, const QString &sta
 
 KDialogDDirSelectDialog::~KDialogDDirSelectDialog()
 {
-    qDebug() << "~KDialogDDirSelectDialog";
+    qDebug();
 
     if(KDialogD::config())
     {
@@ -809,12 +826,10 @@ KDialogDDirSelectDialog::~KDialogDDirSelectDialog()
 
 void KDialogDDirSelectDialog::slotOk()
 {
-    qDebug() << "KDialogDDirSelectDialog::slotOk";
+    qDebug();
 
-    QList<QUrl> urls;
-    urls.append(url());
+    QList<QUrl> urls = selectedUrls();
     QStringList items = urls2Local(urls, this);
-
     if(urls.count()!=items.count())
             KMessageBox::sorry(this, i18n("You can only select local folders."),
                                i18n("Remote Folders Not Accepted"));
@@ -836,7 +851,7 @@ int main(int argc, char **argv)
                      VERSION,						// version
                      i18n("Use KDE dialogs from GTK apps."),		// shortDescription
                      KAboutLicense::GPL,				// licenseType,
-                     i18n("(c) Craig Drummond 2006-2007"),		// copyrightStatement
+                     i18n("(c) Craig Drummond 2006-2011"),		// copyrightStatement
                      QString(),						// otherText
                      i18n("https://github.com/sandsmark/kgtk"), 	// homePageAddress
                      i18n("https://github.com/sandsmark/kgtk/issues"));	// bugAddress
