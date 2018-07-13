@@ -459,8 +459,6 @@ void KDialogDClient::finished()
 
 void KDialogDClient::ok(const QStringList &items)
 {
-    qDebug();
-
     int                        num=items.count();
     QStringList::ConstIterator it(items.begin()),
                                end(items.end());
@@ -835,8 +833,6 @@ KDialogDDirSelectDialog::~KDialogDDirSelectDialog()
 
 void KDialogDDirSelectDialog::slotOk()
 {
-    qDebug();
-
     QList<QUrl> urls = selectedUrls();
     QStringList items = urls2Local(urls, this);
     if(urls.count()!=items.count())
