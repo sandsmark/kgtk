@@ -21,7 +21,7 @@ fi
 app=`basename $0`
 
 if [ "$app" = "kgtk3-wrapper" ] ; then
-    LD_PRELOAD=@CMAKE_INSTALL_PREFIX@/lib/kgtk/libkgtk3.so:$LD_PRELOAD "$@"
+    LD_PRELOAD="@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libkgtk3.so${LIBSUFF}:$LD_PRELOAD" "$@"
 else
     dir=`dirname $0`
     oldPath=$PATH
