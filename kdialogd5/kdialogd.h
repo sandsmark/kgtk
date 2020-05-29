@@ -26,7 +26,7 @@ class KDialogDFileDialog : public QFileDialog
 
     public slots:
 
-    void accept();
+    void accept() override;
 
     signals:
 
@@ -92,7 +92,7 @@ class KDialogDClient : public QObject
     bool readString(QString &str);
     bool writeString(const QString &str);
     void initDialog(const QString &caption, QDialog *d);
-    bool eventFilter(QObject *object, QEvent *event);
+    bool eventFilter(QObject *object, QEvent *event) override;
 
     private:
 

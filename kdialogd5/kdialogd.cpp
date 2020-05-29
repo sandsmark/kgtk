@@ -560,7 +560,7 @@ bool KDialogDClient::eventFilter(QObject *object, QEvent *event)
     if(object==itsDlg && QEvent::ShowToParent==event->type())
     {
 #ifdef USE_KWIN
-        KWindowSystem::setMainWindow(itsDlg, itsXid);
+        KWindowSystem::setMainWindow(itsDlg->windowHandle(), itsXid);
         KWindowSystem::setState(itsDlg->winId(), NET::Modal|NET::SkipTaskbar|NET::SkipPager);
 
         itsDlg->activateWindow();
@@ -733,7 +733,7 @@ void KDialogDFileDialog::accept()
         }
         else if(itsConfirmOw && QFileDialog::AcceptSave==acceptMode())
         {
-            KIO::StatJob *job = KIO::stat(urls.first(), KIO::StatJob::DestinationSide, 0);
+            KIO::StatJob *job = KIO::statDetails(urls.first(), KIO::StatJob::DestinationSide, KIO::StatNoDetails);
             KJobWidgets::setWindow(job, this);
             if (job->exec())				// destination exists
             {

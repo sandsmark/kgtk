@@ -53,7 +53,10 @@ TODO
 #define KGTK_SAFE_FILE_CHOOSER_BUTTON_SUPPORT
 */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <dlfcn.h>
 #include <gtk/gtk.h>
 #include <glib.h>
