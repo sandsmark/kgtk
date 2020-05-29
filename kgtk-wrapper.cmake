@@ -63,12 +63,25 @@ if [ "$toolkit" = "" ] && [ ! -z "$app_abspath" ] ; then
     fi
 fi
 
+if [ ! -z "$KGTK_DEBUG" ]; then
+    echo "Overriding for GTK version $toolkit"
+fi
+
 if [ "$toolkit" = "x" ] ; then
     toolkit=""
 fi
 
 libkgtk_path="@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libk${toolkit}.so${LIBSUFF}"
+
+if [ ! -z "$KGTK_DEBUG" ]; then
+    echo "Override library: $libkgtk_path"
+fi
+
 if [ -f "$libkgtk_path" ] ; then
     export LD_PRELOAD="$libkgtk_path:$LD_PRELOAD"
+else
+    echo "WARNING: Failed to find override library $libkgtk_path"
+    echo "Disabled!"
 fi
+
 exec "$app_abspath" "$@"
