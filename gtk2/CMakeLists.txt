@@ -16,6 +16,9 @@ if (GTK2_FOUND)
     target_link_libraries(kgtk2 ${GTK2_LDFLAGS} -lgthread-2.0 -lglib-2.0 -lc -ldl)
 
     install(TARGETS kgtk2 LIBRARY DESTINATION ${LIB_INSTALL_DIR}/kgtk NAMELINK_SKIP)
+
+    configure_file (kgtk2-wrapper.cmake ${CMAKE_CURRENT_BINARY_DIR}/kgtk2-wrapper @ONLY)
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/kgtk2-wrapper DESTINATION bin)
 else (GTK2_FOUND)
     message("** ERROR      : Could not locate Gtk2 headers, Gtk2 LD_PRELOAD library will not be built.")
 endif (GTK2_FOUND)

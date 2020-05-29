@@ -16,6 +16,9 @@ if (GTK3_FOUND)
     target_link_libraries(kgtk3 ${GTK3_LDFLAGS} -lgthread-2.0 -lglib-2.0 -lc -ldl)
 
     install(TARGETS kgtk3 LIBRARY DESTINATION ${LIB_INSTALL_DIR}/kgtk NAMELINK_SKIP)
+
+    configure_file (kgtk3-wrapper.cmake ${CMAKE_CURRENT_BINARY_DIR}/kgtk3-wrapper @ONLY)
+    install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/kgtk3-wrapper DESTINATION bin)
 else (GTK3_FOUND)
     message("** ERROR      : Could not locate Gtk3 headers, Gtk3 LD_PRELOAD library will not be built.")
 endif (GTK3_FOUND)
