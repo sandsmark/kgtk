@@ -66,7 +66,7 @@ if [ "$toolkit" = "" ] && [ ! -z "$app_abspath" ] ; then
 fi
 
 if [ ! -z "$KGTK_DEBUG" ]; then
-    echo "Overriding for GTK version $toolkit"
+    echo "Overriding for GTK version $toolkit for app $app_name"
 fi
 
 if [ "$toolkit" = "x" ] ; then
@@ -79,7 +79,7 @@ if [ ! -z "$KGTK_DEBUG" ]; then
     echo "Override library: $libkgtk_path"
 fi
 
-if [ -f "$libkgtk_path" ] ; then
+if [ ! -z "$toolkit" ] && [ -f "$libkgtk_path" ] ; then
     export LD_PRELOAD="$libkgtk_path:$LD_PRELOAD"
 else
     echo "WARNING: Failed to find override library $libkgtk_path"
