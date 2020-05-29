@@ -30,7 +30,6 @@ else
     PATH=$oldPath
 
     if [ "$real" != "" ] && [ "`dirname $real`" != "$dir" ] ; then
-        LD_PRELOAD=@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libkgtk3.so:$LD_PRELOAD $real "$@"
         LD_PRELOAD="@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libkgtk3.so${LIBSUFF}:$LD_PRELOAD" $real "$@"
     fi
 fi
