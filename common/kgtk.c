@@ -2365,7 +2365,7 @@ void g_signal_stop_emission_by_name(gpointer instance, const gchar *detailed_sig
     if(kgtkDebug&0x02) printf("KGTK::g_signal_stop_emission_by_name %s  %s (check)\n", g_type_name(G_OBJECT_TYPE(instance)), detailed_signal);
 #endif
 
-    if(kgtkApp!=APP_GIMP || !GTK_IS_FILE_CHOOSER(instance) || strcmp(detailed_signal, "response"))
+    if(!GTK_IS_FILE_CHOOSER(instance) || strcmp(detailed_signal, "response"))
         realFunction(instance, detailed_signal);
 #ifdef KGTK_DEBUG
     else
