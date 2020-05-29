@@ -43,9 +43,11 @@ if [ "$toolkit" = "" ] ; then
     case "$app_name" in
         libreoffice | lowriter | localc | lobase | lodraw | loffice | lomath | loweb)
             export OOO_FORCE_DESKTOP=gnome
+            toolkit="gtk3" ;;
+        gimp | inkscape | kino)
             toolkit="gtk2" ;;
-        eclipse | gimp | inkscape | kino | iceweasel | swiftfox | azureus | mozilla* | thunderbird)
-            toolkit="gtk2" ;;
+        kino | iceweasel | swiftfox | mozilla* | thunderbird)
+            toolkit="gtk3" ;;
         abiword) # Non-working
             toolkit="x" ;;
     esac
