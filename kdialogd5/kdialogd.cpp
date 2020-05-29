@@ -58,7 +58,7 @@
 #endif
 #include <fstream>
 
-KConfig *KDialogD::theirConfig=NULL;
+KConfig *KDialogD::theirConfig = NULL;
 
 #define CFG_KEY_DIALOG_SIZE "KDialogDSize"
 #define CFG_KEY_URLS        "Urls"
@@ -68,9 +68,9 @@ KConfig *KDialogD::theirConfig=NULL;
 #define DEFAULT_TIMEOUT     30
 #endif
 
-static QString groupName(const QString &app, bool fileDialog=true)
+static QString groupName(const QString &app, bool fileDialog = true)
 {
-    return QString(fileDialog ? "KFileDialog " : "KDirSelectDialog ")+app;
+    return QString(fileDialog ? "KFileDialog " : "KDirSelectDialog ") + app;
 }
 
 Q_LOGGING_CATEGORY(kdialogd, "kgtk.kdialogd")
@@ -83,73 +83,78 @@ static int createSocket()
     int         socketFd;
     ksocklen_t  addrlen;
     struct stat s;
-    const char  *sock=getSockName();
-    int stat_err=lstat(sock, &s);
+    const char  *sock = getSockName();
+    int stat_err = lstat(sock, &s);
 
-    if(!stat_err && S_ISLNK(s.st_mode))
-    {
+    if (!stat_err && S_ISLNK(s.st_mode)) {
         qCWarning(kdialogd) << "Someone is running a symlink attack on you" ;
-        if(unlink(sock))
-        {
+
+        if (unlink(sock)) {
             qCWarning(kdialogd) << "Could not delete symlink" ;
             return -1;
         }
     }
 
-    if (!access(sock, R_OK|W_OK))
-    {
+    if (!access(sock, R_OK | W_OK)) {
         qCWarning(kdialogd) << "stale socket exists" ;
-        if (unlink(sock))
-        {
+
+        if (unlink(sock)) {
             qCWarning(kdialogd) << "Could not delete stale socket" ;
             return -1;
         }
     }
 
     socketFd = socket(PF_UNIX, SOCK_STREAM, 0);
-    if (socketFd < 0)
-    {
+
+    if (socketFd < 0) {
         qCritical() << "socket(): " << strerror(errno);
         return -1;
     }
 
     struct sockaddr_un addr;
+
     addr.sun_family = AF_UNIX;
-    strncpy(addr.sun_path, sock, sizeof(addr.sun_path)-1);
-    addr.sun_path[sizeof(addr.sun_path)-1] = '\000';
+
+    strncpy(addr.sun_path, sock, sizeof(addr.sun_path) - 1);
+
+    addr.sun_path[sizeof(addr.sun_path) - 1] = '\000';
+
     addrlen = SUN_LEN(&addr);
-    if (bind(socketFd, (struct sockaddr *)&addr, addrlen) < 0)
-    {
+
+    if (bind(socketFd, (struct sockaddr *)&addr, addrlen) < 0) {
         qCritical() << "bind(): " << strerror(errno);
         return -1;
     }
 
     struct linger lin;
+
     lin.l_onoff = lin.l_linger = 0;
+
     if (setsockopt(socketFd, SOL_SOCKET, SO_LINGER, (char *) &lin,
-                   sizeof(linger)) < 0)
-    {
+                   sizeof(linger)) < 0) {
         qCritical() << "setsockopt(SO_LINGER): " << strerror(errno);
         return -1;
     }
 
     int opt = 1;
+
     if (setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, (char *) &opt,
-                   sizeof(opt)) < 0)
-    {
+                   sizeof(opt)) < 0) {
         qCritical() << "setsockopt(SO_REUSEADDR): " << strerror(errno);
         return -1;
     }
+
     opt = 1;
+
     if (setsockopt(socketFd, SOL_SOCKET, SO_KEEPALIVE, (char *) &opt,
-                   sizeof(opt)) < 0)
-    {
+                   sizeof(opt)) < 0) {
         qCritical() << "setsockopt(SO_KEEPALIVE): " << strerror(errno);
         return -1;
     }
+
     chmod(sock, 0600);
-    if (listen(socketFd, 1) < 0)
-    {
+
+    if (listen(socketFd, 1) < 0) {
         qCritical() << "listen(): " << strerror(errno);
         return -1;
     }
@@ -160,79 +165,91 @@ static int createSocket()
 static QStringList urls2Local(const QList<QUrl> &urls, QWidget *parent)
 {
     QStringList items;
-    foreach (const QUrl &url, urls)
-    {
+
+    foreach (const QUrl &url, urls) {
         qCDebug(kdialogd) << "URL" << url << " local? " << url.isLocalFile();
-        if (url.isLocalFile()) items.append(url.path());
-        else
-        {
+
+        if (url.isLocalFile()) {
+            items.append(url.path());
+        } else {
             KIO::StatJob *job = KIO::mostLocalUrl(url);
             KJobWidgets::setWindow(job, parent);
             job->exec();
             const QUrl localUrl = job->mostLocalUrl();
             qCDebug(kdialogd) << "mostLocal" << localUrl << "local?" << localUrl.isLocalFile();
-            if (localUrl.isLocalFile()) items.append(localUrl.path());
-            else break;
+
+            if (localUrl.isLocalFile()) {
+                items.append(localUrl.path());
+            } else {
+                break;
+            }
         }
     }
+
     return items;
 }
 
 KDialogD::KDialogD(QObject *parent)
-        : QObject(parent),
+    : QObject(parent),
 #ifdef KDIALOGD_APP
-          itsTimer(NULL),
-          itsTimeoutVal(DEFAULT_TIMEOUT),
+      itsTimer(NULL),
+      itsTimeoutVal(DEFAULT_TIMEOUT),
 #endif
-          itsFd(::createSocket()),
-          itsNumConnections(0)
+      itsFd(::createSocket()),
+      itsNumConnections(0)
 {
-    if(itsFd<0)
-    {
+    if (itsFd < 0) {
         qCritical() << "KDialogD could not create socket";
 #ifdef KDIALOGD_APP
         QCoreApplication::exit(1);
 #endif
-    }
-    else
-    {
+    } else {
         std::ofstream f(getPidFileName());
 
-        if(f)
-        {
+        if (f) {
             f << getpid();
             f.close();
         }
-        if(!theirConfig)
-            theirConfig=new KConfig("kdialogd5rc"); // , KConfig::OnlyLocal);
+
+        if (!theirConfig) {
+            theirConfig = new KConfig("kdialogd5rc");    // , KConfig::OnlyLocal);
+        }
 
         connect(new QSocketNotifier(itsFd, QSocketNotifier::Read, this),
                 SIGNAL(activated(int)), this, SLOT(newConnection()));
 
 #ifdef KDIALOGD_APP
-        if(theirConfig->hasGroup(CFG_TIMEOUT_GROUP))
-        {
-            itsTimeoutVal=KConfigGroup(theirConfig, CFG_TIMEOUT_GROUP).readEntry(CFG_TIMEOUT_KEY, DEFAULT_TIMEOUT);
-            if(itsTimeoutVal<0)
-                itsTimeoutVal=DEFAULT_TIMEOUT;
+
+        if (theirConfig->hasGroup(CFG_TIMEOUT_GROUP)) {
+            itsTimeoutVal = KConfigGroup(theirConfig, CFG_TIMEOUT_GROUP).readEntry(CFG_TIMEOUT_KEY, DEFAULT_TIMEOUT);
+
+            if (itsTimeoutVal < 0) {
+                itsTimeoutVal = DEFAULT_TIMEOUT;
+            }
         }
+
         qCDebug(kdialogd) << "Timeout:" << itsTimeoutVal;
-        if(itsTimeoutVal)
-        {
-            connect(itsTimer=new QTimer(this), SIGNAL(timeout()), this, SLOT(timeout()));
+
+        if (itsTimeoutVal) {
+            connect(itsTimer = new QTimer(this), SIGNAL(timeout()), this, SLOT(timeout()));
             itsTimer->setSingleShot(true);
         }
+
 #endif
     }
 }
 
 KDialogD::~KDialogD()
 {
-    if(-1!=itsFd)
+    if (-1 != itsFd) {
         close(itsFd);
-    if(theirConfig)
+    }
+
+    if (theirConfig) {
         delete theirConfig;
-    theirConfig=NULL;
+    }
+
+    theirConfig = NULL;
 }
 
 void KDialogD::newConnection()
@@ -243,30 +260,29 @@ void KDialogD::newConnection()
     struct sockaddr_un clientname;
     int                connectedFD;
 
-    if((connectedFD=::accept(itsFd, (struct sockaddr *) &clientname, &addrlen))>=0)
-    {
+    if ((connectedFD =::accept(itsFd, (struct sockaddr *) &clientname, &addrlen)) >= 0) {
         int appNameLen;
 
-        if(readBlock(connectedFD, (char *)&appNameLen, 4))
-        {
-            bool     ok=true;
+        if (readBlock(connectedFD, (char *)&appNameLen, 4)) {
+            bool     ok = true;
             QByteArray appName;
 
-            if(0==appNameLen)
-                appName="Generic";
-            else
-            {
+            if (0 == appNameLen) {
+                appName = "Generic";
+            } else {
                 appName.resize(appNameLen);
-                ok=readBlock(connectedFD, appName.data(), appNameLen);
+                ok = readBlock(connectedFD, appName.data(), appNameLen);
             }
 
-            if(ok)
-            {
+            if (ok) {
                 itsNumConnections++;
                 qCDebug(kdialogd) << "now have" << itsNumConnections << "connections";
 #ifdef KDIALOGD_APP
-                if(itsTimer)
+
+                if (itsTimer) {
                     itsTimer->stop();
+                }
+
 #endif
                 connect(new KDialogDClient(connectedFD, appName, this),
                         SIGNAL(error(KDialogDClient *)),
@@ -282,44 +298,46 @@ void KDialogD::deleteConnection(KDialogDClient *client)
     client->deleteLater();
 
 #ifdef KDIALOGD_APP
-    if(0==--itsNumConnections)
-    {
+
+    if (0 == --itsNumConnections) {
         qCDebug(kdialogd) << "no connections, starting timer";
-        if(itsTimeoutVal)
-            itsTimer->start(itsTimeoutVal*1000);  // Only single shot...
-        else
+
+        if (itsTimeoutVal) {
+            itsTimer->start(itsTimeoutVal * 1000);    // Only single shot...
+        } else {
             timeout();
+        }
+    } else {
+        qCDebug(kdialogd) << "still have" << itsNumConnections << "connections";
     }
-    else qCDebug(kdialogd) << "still have" << itsNumConnections << "connections";
+
 #endif
 }
 
 void KDialogD::timeout()
 {
 #ifdef KDIALOGD_APP
-    if(0==itsNumConnections)
-    {
-        if(grabLock(0)>0)   // 0=> no wait...
-        {
+
+    if (0 == itsNumConnections) {
+        if (grabLock(0) > 0) { // 0=> no wait...
             qCDebug(kdialogd) << "Timeout and no connections, so exit";
             QCoreApplication::exit(0);
-        }
-        else     //...unlock lock file...
-        {
+        } else { //...unlock lock file...
             qCDebug(kdialogd) << "Timeout, but unable to grab lock file - app must be connecting";
             releaseLock();
         }
     }
+
 #endif
 }
 
 KDialogDClient::KDialogDClient(int sock, const QString &an, QObject *parent)
-              : QObject(parent),
-                itsFd(sock),
-                itsDlg(NULL),
-                itsXid(0),
-                itsAccepted(false),
-                itsAppName(an)
+    : QObject(parent),
+      itsFd(sock),
+      itsDlg(NULL),
+      itsXid(0),
+      itsAccepted(false),
+      itsAppName(an)
 {
     qCDebug(kdialogd) << "new client..." << itsAppName << " (" << itsFd << ")";
     connect(new QSocketNotifier(itsFd, QSocketNotifier::Read, this), SIGNAL(activated(int)), this, SLOT(read()));
@@ -329,29 +347,32 @@ KDialogDClient::KDialogDClient(int sock, const QString &an, QObject *parent)
 KDialogDClient::~KDialogDClient()
 {
     qCDebug(kdialogd) << "Deleted client" << itsAppName;
-    if(-1!=itsFd)
+
+    if (-1 != itsFd) {
         ::close(itsFd);
-    itsDlg=NULL;
-    if(KDialogD::config())
+    }
+
+    itsDlg = NULL;
+
+    if (KDialogD::config()) {
         KDialogD::config()->sync();
+    }
 }
 
 void KDialogDClient::close()
 {
     qCDebug(kdialogd) << "close" << itsFd;
 
-    if(itsDlg)
-    {
+    if (itsDlg) {
         itsDlg->close();
         itsDlg->deleteLater();
-        itsDlg=NULL;
-        itsXid=0;
+        itsDlg = NULL;
+        itsXid = 0;
     }
 
-    if (itsFd!=-1)
-    {
+    if (itsFd != -1) {
         ::close(itsFd);
-        itsFd=-1;
+        itsFd = -1;
         emit error(this);
     }
 }
@@ -360,78 +381,73 @@ void KDialogDClient::read()
 {
     qCDebug(kdialogd) << "read" << itsFd;
 
-    if(-1==itsFd)
+    if (-1 == itsFd) {
         return;
+    }
 
     char         request;
     QString      caption;
 
-    if(!itsDlg && readData(&request, 1) && request>=(char)OP_FILE_OPEN && request<=(char)OP_FOLDER &&
-       readData((char *)&itsXid, 4) && readString(caption))
-    {
-        if("."==caption)
-            switch((Operation)request)
-            {
-                case OP_FILE_OPEN:
-                case OP_FILE_OPEN_MULTIPLE:
-                    caption=i18n("Open");
-                    break;
-                case OP_FILE_SAVE:
-                    caption=i18n("Save As");
-                    break;
-                case OP_FOLDER:
-                    caption=i18n("Select Folder");
-                    break;
-                default:
-                    break;
+    if (!itsDlg && readData(&request, 1) && request >= (char)OP_FILE_OPEN && request <= (char)OP_FOLDER &&
+            readData((char *)&itsXid, 4) && readString(caption)) {
+        if ("." == caption)
+            switch ((Operation)request) {
+            case OP_FILE_OPEN:
+            case OP_FILE_OPEN_MULTIPLE:
+                caption = i18n("Open");
+                break;
+
+            case OP_FILE_SAVE:
+                caption = i18n("Save As");
+                break;
+
+            case OP_FOLDER:
+                caption = i18n("Select Folder");
+                break;
+
+            default:
+                break;
             }
 
-        if(OP_FOLDER==(Operation)request)
-        {
+        if (OP_FOLDER == (Operation)request) {
             QString intialFolder;
 
-            if(readString(intialFolder))
-            {
+            if (readString(intialFolder)) {
                 initDialog(caption, new KDialogDDirSelectDialog(itsAppName, intialFolder, true, 0L));
                 return;
             }
-        }
-        else
-        {
+        } else {
             QString intialFolder,
                     filter,
                     customWidgets;
-            char    overW=0;
+            char    overW = 0;
 
-            if(readString(intialFolder) && readString(filter) && readString(customWidgets) &&
-               (OP_FILE_SAVE!=(Operation)request || readData(&overW, 1)))
-            {
+            if (readString(intialFolder) && readString(filter) && readString(customWidgets) &&
+                    (OP_FILE_SAVE != (Operation)request || readData(&overW, 1))) {
                 // LibreOffice has some "/" chars in its filternames - this seems to mess KFileDialog up, and we
                 // get blank names! So, foreach filtername we need to replace "/" with "\/"
-                if(!filter.isEmpty())
-                {
-                    QStringList filters=filter.split("\n", QString::SkipEmptyParts);
+                if (!filter.isEmpty()) {
+                    QStringList filters = filter.split("\n", QString::SkipEmptyParts);
                     QStringList modified;
-                    foreach(QString f, filters)
-                    {
-                        int sep=f.indexOf('|');
-                        if(-1==sep)
-                        {
+
+                    foreach (QString f, filters) {
+                        int sep = f.indexOf('|');
+
+                        if (-1 == sep) {
                             modified.append(f);
-                        }
-                        else
-                        {
-                            QString ext=f.left(sep+1);
-                            QString text=f.mid(sep+1);
+                        } else {
+                            QString ext = f.left(sep + 1);
+                            QString text = f.mid(sep + 1);
                             text.replace("/", "\\/");
-                            modified.append(ext+text);
+                            modified.append(ext + text);
                         }
                     }
-                    filter=modified.join("\n");
+
+                    filter = modified.join("\n");
                 }
-                
+
                 initDialog(caption, new KDialogDFileDialog(itsAppName, (Operation)request, intialFolder,
-                                                           filter, customWidgets, overW ? true : false));
+                           filter, customWidgets, overW ? true : false));
                 return;
             }
         }
@@ -444,8 +460,9 @@ void KDialogDClient::read()
 
 void KDialogDClient::finished()
 {
-    if(-1==itsFd)
+    if (-1 == itsFd) {
         return;
+    }
 
     //
     // * finished is emitted when a dialog is ok'ed/cancel'ed/closed
@@ -453,52 +470,57 @@ void KDialogDClient::finished()
     // * the dir select dialog doesnt seem to set the QDialog result parameter
     //   when it is accepted - so for this reason if ok is clicked we store an
     //   'accepted' value there, and check for that after the dialog is finished.
-    qCDebug(kdialogd) << "finished " << (void *)itsDlg << itsAccepted << (itsDlg ? QDialog::Accepted==itsDlg->result() : false);
+    qCDebug(kdialogd) << "finished " << (void *)itsDlg << itsAccepted << (itsDlg ? QDialog::Accepted == itsDlg->result() : false);
 
-    if(itsDlg && !(itsAccepted || QDialog::Accepted==itsDlg->result()))
+    if (itsDlg && !(itsAccepted || QDialog::Accepted == itsDlg->result())) {
         cancel();
+    }
 }
 
 void KDialogDClient::ok(const QStringList &items)
 {
-    int                        num=items.count();
+    int                        num = items.count();
     QStringList::ConstIterator it(items.begin()),
-                               end(items.end());
-    bool                       error=!writeData((char *)&num, 4);
+                end(items.end());
+    bool                       error = !writeData((char *)&num, 4);
 
-    for(; !error && it!=end; ++it)
-    {
+    for (; !error && it != end; ++it) {
         qCDebug(kdialogd) << "writeString " << *it;
-        error=!writeString(*it);
+        error = !writeString(*it);
     }
 
-    if(error)
+    if (error) {
         close();
-    else
-        itsAccepted=true;
-    if(itsDlg)
+    } else {
+        itsAccepted = true;
+    }
+
+    if (itsDlg) {
         itsDlg->deleteLater();
-    itsDlg=NULL;
+    }
+
+    itsDlg = NULL;
 }
 
 void KDialogDClient::cancel()
 {
     qCDebug(kdialogd);
 
-    if(itsDlg)
-    {
+    if (itsDlg) {
         qCDebug(kdialogd) << "send cancel";
 
-        int rv=0;
+        int rv = 0;
 
-        if(!writeData((char *)&rv, 4))
-        {
+        if (!writeData((char *)&rv, 4)) {
             qCDebug(kdialogd) << "failed to write data!";
             close();
         }
-        if(itsDlg)
+
+        if (itsDlg) {
             itsDlg->deleteLater();
-        itsDlg=NULL;
+        }
+
+        itsDlg = NULL;
     }
 }
 
@@ -515,16 +537,18 @@ bool KDialogDClient::readString(QString &str)
 
     int size;
 
-    if(!readData((char *)&size, 4))
+    if (!readData((char *)&size, 4)) {
         return false;
+    }
 
     QByteArray buffer;
     buffer.resize(size);
 
-    if(!readData(buffer.data(), size))
+    if (!readData(buffer.data(), size)) {
         return false;
+    }
 
-    str=QString::fromUtf8(buffer.data());
+    str = QString::fromUtf8(buffer.data());
     return true;
 }
 
@@ -534,7 +558,7 @@ bool KDialogDClient::writeString(const QString &str)
 
     QByteArray utf8(str.toUtf8());
 
-    int size=utf8.length()+1;
+    int size = utf8.length() + 1;
 
     return writeData((char *)&size, 4) && writeData(utf8.data(), size);
 }
@@ -543,14 +567,16 @@ void KDialogDClient::initDialog(const QString &caption, QDialog *d)
 {
     qCDebug(kdialogd) << "initDialog" << itsFd;
 
-    itsAccepted=false;
-    itsDlg=d;
+    itsAccepted = false;
+    itsDlg = d;
 
-    if(!caption.isEmpty())
+    if (!caption.isEmpty()) {
         itsDlg->setWindowTitle(caption);
+    }
 
-    if(itsXid)
+    if (itsXid) {
         itsDlg->installEventFilter(this);
+    }
 
     connect(itsDlg, SIGNAL(ok(const QStringList &)), this, SLOT(ok(const QStringList &)));
     connect(itsDlg, SIGNAL(finished(int)), this, SLOT(finished()));
@@ -559,18 +585,20 @@ void KDialogDClient::initDialog(const QString &caption, QDialog *d)
 
 bool KDialogDClient::eventFilter(QObject *object, QEvent *event)
 {
-    if(object==itsDlg && QEvent::ShowToParent==event->type())
-    {
+    if (object == itsDlg && QEvent::ShowToParent == event->type()) {
 #ifdef USE_KWIN
         KWindowSystem::setMainWindow(itsDlg->windowHandle(), itsXid);
-        KWindowSystem::setState(itsDlg->winId(), NET::Modal|NET::SkipTaskbar|NET::SkipPager);
+        KWindowSystem::setState(itsDlg->winId(), NET::Modal | NET::SkipTaskbar | NET::SkipPager);
 
         itsDlg->activateWindow();
         itsDlg->raise();
 
-        QPixmap icon=KWindowSystem::icon(itsXid, 16, 16, true, KWindowSystem::NETWM | KWindowSystem::WMHints);
-        if(!icon.isNull())
+        QPixmap icon = KWindowSystem::icon(itsXid, 16, 16, true, KWindowSystem::NETWM | KWindowSystem::WMHints);
+
+        if (!icon.isNull()) {
             itsDlg->setWindowIcon(QIcon(icon));
+        }
+
 #else
         XSetTransientForHint(QX11Info::display(), itsDlg->winId(), itsXid);
 #endif
@@ -582,86 +610,94 @@ bool KDialogDClient::eventFilter(QObject *object, QEvent *event)
 
 static QUrl resolveStartDir(const QString &startDir)
 {
-    return QUrl(startDir.isEmpty() || "~"==startDir ? QDir::homePath() : startDir);
+    return QUrl(startDir.isEmpty() || "~" == startDir ? QDir::homePath() : startDir);
 }
 
 KDialogDFileDialog::KDialogDFileDialog(QString &an, Operation op, const QString &startDir,
                                        const QString &filter, const QString &customWidgets, bool confirmOw)
-                  : QFileDialog(NULL),
-                    itsConfirmOw(confirmOw),
-                    itsDone(false),
-                    itsAppName(an)
+    : QFileDialog(NULL),
+      itsConfirmOw(confirmOw),
+      itsDone(false),
+      itsAppName(an)
 {
     setModal(false);
-    if (!confirmOw) setOption(QFileDialog::DontConfirmOverwrite);
+
+    if (!confirmOw) {
+        setOption(QFileDialog::DontConfirmOverwrite);
+    }
+
     setDirectoryUrl(resolveStartDir(startDir));
 
     // Need to convert the filter list from KDE to Qt format
     const QStringList filterList = filter.split('\n');
     QStringList qtFilters;
-    foreach (const QString &filt, filterList)
-    {
+
+    foreach (const QString &filt, filterList) {
         int idx = filt.indexOf('|');
-        if (idx!=-1) qtFilters.append(filt.mid(idx+1)+" ("+filt.left(idx)+')');
-        else qtFilters.append(filt);
+
+        if (idx != -1) {
+            qtFilters.append(filt.mid(idx + 1) + " (" + filt.left(idx) + ')');
+        } else {
+            qtFilters.append(filt);
+        }
     }
+
     setNameFilters(qtFilters);
 
-    switch(op)
-    {
-        case OP_FILE_OPEN:
-            setAcceptMode(QFileDialog::AcceptOpen);
-            setFileMode(QFileDialog::ExistingFile);
-            break;
-        case OP_FILE_OPEN_MULTIPLE:
-            setAcceptMode(QFileDialog::AcceptOpen);
-            setFileMode(QFileDialog::ExistingFiles);
-            break;
-        case OP_FILE_SAVE:
-            setAcceptMode(QFileDialog::AcceptSave);
-            setFileMode(QFileDialog::AnyFile);
-            break;
-        default:
-            break;
+    switch (op) {
+    case OP_FILE_OPEN:
+        setAcceptMode(QFileDialog::AcceptOpen);
+        setFileMode(QFileDialog::ExistingFile);
+        break;
+
+    case OP_FILE_OPEN_MULTIPLE:
+        setAcceptMode(QFileDialog::AcceptOpen);
+        setFileMode(QFileDialog::ExistingFiles);
+        break;
+
+    case OP_FILE_SAVE:
+        setAcceptMode(QFileDialog::AcceptSave);
+        setFileMode(QFileDialog::AnyFile);
+        break;
+
+    default:
+        break;
     }
 
-    if(KDialogD::config())
-    {
+    if (KDialogD::config()) {
         KConfigGroup cfg(KDialogD::config(), groupName(itsAppName));
 
         selectUrl(cfg.readEntry(CFG_KEY_URLS, QStringList()).value(0));
         resize(cfg.readEntry(CFG_KEY_DIALOG_SIZE, QSize(600, 400)));
     }
 
-    if(!customWidgets.isEmpty())
-    {
+    if (!customWidgets.isEmpty()) {
         qCWarning(kdialogd) << "Client" << itsAppName << "requests custom widgets, which are not currently supported";
 
-        QWidget *custom=0L;
-        QBoxLayout *layout=0;
-        QStringList widgets=customWidgets.split("@@", QString::SkipEmptyParts);
-        foreach(const QString &wid, widgets)
-        {
-            QStringList parts=wid.split("||", QString::SkipEmptyParts);
-            
-            if(2==parts.length())
-            {
-                QString name=parts[0];
+        QWidget *custom = 0L;
+        QBoxLayout *layout = 0;
+        QStringList widgets = customWidgets.split("@@", QString::SkipEmptyParts);
+
+        foreach (const QString &wid, widgets) {
+            QStringList parts = wid.split("||", QString::SkipEmptyParts);
+
+            if (2 == parts.length()) {
+                QString name = parts[0];
                 name.replace("_", "&");
-                
-                if(!custom)
-                {
-                    custom=new QWidget();
-                    layout=new QBoxLayout(QBoxLayout::TopToBottom, custom);
+
+                if (!custom) {
+                    custom = new QWidget();
+                    layout = new QBoxLayout(QBoxLayout::TopToBottom, custom);
                     layout->setMargin(0);
                 }
-                QCheckBox *cb=new QCheckBox(name, custom);
-                cb->setChecked("true"==parts[1]);
+
+                QCheckBox *cb = new QCheckBox(name, custom);
+                cb->setChecked("true" == parts[1]);
                 layout->addWidget(cb);
                 itsCustom.insert(parts[0], cb);
             }
         }
-        
+
         // TODO: support for custom widgets
         //if(custom)
         //    fileWidget()->setCustomWidget(QString(), custom);
@@ -674,68 +710,69 @@ void KDialogDFileDialog::accept()
 
     QList<QUrl> urls(selectedUrls());
     qCDebug(kdialogd) << urls.count() << acceptMode() << urls;
-    bool        good=true;
+    bool        good = true;
 
-    if(urls.count())
-    {
+    if (urls.count()) {
         QStringList items = urls2Local(urls, this);
 
-        if(urls.count()!=items.count())
-        {
+        if (urls.count() != items.count()) {
             KMessageBox::sorry(this, i18n("You can only select local files."),
                                i18n("Remote Files Not Accepted"));
-            good=false;
-        }
-        else if(itsConfirmOw && QFileDialog::AcceptSave==acceptMode())
-        {
+            good = false;
+        } else if (itsConfirmOw && QFileDialog::AcceptSave == acceptMode()) {
             KIO::StatJob *job = KIO::statDetails(urls.first(), KIO::StatJob::DestinationSide, KIO::StatNoDetails);
             KJobWidgets::setWindow(job, this);
-            if (job->exec())				// destination exists
-            {
-                int result = KMessageBox::warningContinueCancel(this,
-                                            i18n("File %1 exits.\nDo you want to replace it?")
-                                                                           .arg(urls.first().toDisplayString()),
-                                            i18n("File Exists"),
-                                            KGuiItem(i18n("Replace"), "filesaveas"), KStandardGuiItem::cancel(), QString(),
-                                            KMessageBox::Notify|KMessageBox::PlainCaption);
 
-                good = (result==KMessageBox::Continue);
+            if (job->exec()) {			// destination exists
+                int result = KMessageBox::warningContinueCancel(this,
+                             i18n("File %1 exits.\nDo you want to replace it?")
+                             .arg(urls.first().toDisplayString()),
+                             i18n("File Exists"),
+                             KGuiItem(i18n("Replace"), "filesaveas"), KStandardGuiItem::cancel(), QString(),
+                             KMessageBox::Notify | KMessageBox::PlainCaption);
+
+                good = (result == KMessageBox::Continue);
             }
         }
 
-        if(good)
-        {
+        if (good) {
             QString filter = selectedNameFilter();
-            if(!filter.isEmpty())
-            {
+
+            if (!filter.isEmpty()) {
                 // Convert the Qt format filter back to KDE format
                 int idx = filter.lastIndexOf(" (");
-                if (idx!=-1)
-                {
-                    if (filter.endsWith(')')) filter.chop(1);
-                    filter = filter.mid(idx+2)+'|'+filter.left(idx);
+
+                if (idx != -1) {
+                    if (filter.endsWith(')')) {
+                        filter.chop(1);
+                    }
+
+                    filter = filter.mid(idx + 2) + '|' + filter.left(idx);
                 }
+
                 items.append(filter);
             }
 
-            if(itsCustom.count())
-            {
+            if (itsCustom.count()) {
                 QString custom;
                 QMap<QString, QWidget *>::ConstIterator it(itsCustom.constBegin()),
-                                                        end(itsCustom.constEnd());
-                                                        
-                for(; it!=end; ++it)
-                    if(qobject_cast<const QCheckBox *>(it.value()))
-                        custom=custom+"@@"+it.key()+"||"+QString(static_cast<const QCheckBox *>(it.value())->isChecked() ? "true" : "false");
-                if(!custom.isEmpty())
+                     end(itsCustom.constEnd());
+
+                for (; it != end; ++it)
+                    if (qobject_cast<const QCheckBox *>(it.value())) {
+                        custom = custom + "@@" + it.key() + "||" + QString(static_cast<const QCheckBox *>(it.value())->isChecked() ? "true" : "false");
+                    }
+
+                if (!custom.isEmpty()) {
                     items.append(custom);
+                }
             }
-            
+
             emit ok(items);
             hide();
-       }
-       else
+        } else {
             setResult(QDialog::Rejected);
+        }
     }
 }
 
@@ -743,8 +780,7 @@ KDialogDFileDialog::~KDialogDFileDialog()
 {
     qCDebug(kdialogd);
 
-    if(KDialogD::config())
-    {
+    if (KDialogD::config()) {
         KConfigGroup cfg(KDialogD::config(), groupName(itsAppName));
 
         cfg.writeEntry(CFG_KEY_URLS, selectedUrls());
@@ -753,19 +789,21 @@ KDialogDFileDialog::~KDialogDFileDialog()
 }
 
 KDialogDDirSelectDialog::KDialogDDirSelectDialog(QString &an, const QString &startDir, bool localOnly,
-                                                 QWidget *parent)
-                       : QFileDialog(parent),
-                         itsAppName(an)
+        QWidget *parent)
+    : QFileDialog(parent),
+      itsAppName(an)
 {
     setModal(false);
     setAcceptMode(QFileDialog::AcceptOpen);
     setFileMode(QFileDialog::Directory);
     setOption(QFileDialog::ShowDirsOnly);
     setDirectoryUrl(resolveStartDir(startDir));
-    if (localOnly) setSupportedSchemes(QStringList() << "file");
 
-    if(KDialogD::config())
-    {
+    if (localOnly) {
+        setSupportedSchemes(QStringList() << "file");
+    }
+
+    if (KDialogD::config()) {
         KConfigGroup cfg(KDialogD::config(), groupName(itsAppName, false));
 
         //TODO !!! readConfig(KDialogD::config(), grp);
@@ -777,8 +815,7 @@ KDialogDDirSelectDialog::~KDialogDDirSelectDialog()
 {
     qCDebug(kdialogd);
 
-    if(KDialogD::config())
-    {
+    if (KDialogD::config()) {
         KConfigGroup cfg(KDialogD::config(), groupName(itsAppName, false));
 
         //TODO !!! writeConfig(KDialogD::config(), grp);
@@ -790,11 +827,11 @@ void KDialogDDirSelectDialog::slotOk()
 {
     QList<QUrl> urls = selectedUrls();
     QStringList items = urls2Local(urls, this);
-    if(urls.count()!=items.count())
-            KMessageBox::sorry(this, i18n("You can only select local folders."),
-                               i18n("Remote Folders Not Accepted"));
-    else
-    {
+
+    if (urls.count() != items.count())
+        KMessageBox::sorry(this, i18n("You can only select local folders."),
+                           i18n("Remote Folders Not Accepted"));
+    else {
         emit ok(items);
         hide();
     }
@@ -828,9 +865,18 @@ int main(int argc, char **argv)
     QCommandLineParser parser;
     about.setupCommandLine(&parser);
     parser.process(app);
-    if (parser.isSet("version")) return 0;
-    if (parser.isSet("author")) return 0;
-    if (parser.isSet("license")) return 0;
+
+    if (parser.isSet("version")) {
+        return 0;
+    }
+
+    if (parser.isSet("author")) {
+        return 0;
+    }
+
+    if (parser.isSet("license")) {
+        return 0;
+    }
 
     KDBusService service(KDBusService::Unique);
     // get here only if the first instance of the daemon
@@ -850,7 +896,7 @@ extern "C"
 };
 
 KDialogDKDED::KDialogDKDED()
-            : KDEDModule()
+    : KDEDModule()
 {
     new KDialogD(this);
 }

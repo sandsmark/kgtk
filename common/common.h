@@ -36,11 +36,10 @@
 #include "config.h"
 
 #ifdef KGTK_DEBUG
-static int kgtkDebug=0;
+static int kgtkDebug = 0;
 #endif
 
-typedef enum
-{
+typedef enum {
     OP_NULL                = 0,
     OP_FILE_OPEN           = 1,
     OP_FILE_OPEN_MULTIPLE  = 2,
@@ -51,28 +50,29 @@ typedef enum
 #define PID_DIR  "kde-"
 #define PID_NAME "kdialogd.pid"
 
-static const char * getPidFileName()
+static const char *getPidFileName()
 {
-    static char *pidfile=NULL;
+    static char *pidfile = NULL;
 
-    if(!pidfile)
-    {
-        char *user=getenv("USER");
+    if (!pidfile) {
+        char *user = getenv("USER");
 
-        if(!user)
-            user=getenv("LOGNAME");
+        if (!user) {
+            user = getenv("LOGNAME");
+        }
 
-        if(user)
-        {
-            char *tmp=getenv("KDETMP");
+        if (user) {
+            char *tmp = getenv("KDETMP");
 
-            if(!tmp || !tmp[0])
-                tmp=getenv("TMPDIR");
+            if (!tmp || !tmp[0]) {
+                tmp = getenv("TMPDIR");
+            }
 
-            if(!tmp || !tmp[0])
-                tmp=(char *)"/tmp";
+            if (!tmp || !tmp[0]) {
+                tmp = (char *)"/tmp";
+            }
 
-            pidfile=(char *)malloc(strlen(tmp)+strlen(PID_DIR)+strlen(user)+strlen(PID_NAME)+3); /* 2 slashes and null terminator */
+            pidfile = (char *)malloc(strlen(tmp) + strlen(PID_DIR) + strlen(user) + strlen(PID_NAME) + 3); /* 2 slashes and null terminator */
 
 #ifdef __KDIALOGD_H__
             /* We are kdialogd - so create socket folder if it does not exist... */
@@ -91,28 +91,29 @@ static const char * getPidFileName()
 #define SOCK_DIR  "ksocket-"
 #define SOCK_NAME "kdialogd"
 
-static const char * getSockName()
+static const char *getSockName()
 {
-    static char *sock=NULL;
+    static char *sock = NULL;
 
-    if(!sock)
-    {
-        char *user=getenv("USER");
+    if (!sock) {
+        char *user = getenv("USER");
 
-        if(!user)
-            user=getenv("LOGNAME");
+        if (!user) {
+            user = getenv("LOGNAME");
+        }
 
-        if(user)
-        {
-            char *tmp=getenv("KDETMP");
+        if (user) {
+            char *tmp = getenv("KDETMP");
 
-            if(!tmp || !tmp[0])
-                tmp=getenv("TMPDIR");
+            if (!tmp || !tmp[0]) {
+                tmp = getenv("TMPDIR");
+            }
 
-            if(!tmp || !tmp[0])
-                tmp=(char *)"/tmp";
+            if (!tmp || !tmp[0]) {
+                tmp = (char *)"/tmp";
+            }
 
-            sock=(char *)malloc(strlen(tmp)+strlen(SOCK_DIR)+strlen(user)+strlen(SOCK_NAME)+4+32); /* 4=2 slashes, 1 dash, and null terminator */
+            sock = (char *)malloc(strlen(tmp) + strlen(SOCK_DIR) + strlen(user) + strlen(SOCK_NAME) + 4 + 32); /* 4=2 slashes, 1 dash, and null terminator */
 
 #ifdef __KDIALOGD_H__
             /* We are kdialogd - so create socket folder if it does not exist... */
@@ -121,67 +122,65 @@ static const char * getSockName()
 #endif
 
             /* CPD: TODO get dispaly number! */
-            sprintf(sock, "%s/%s%s/%s-%d", tmp, SOCK_DIR, user, SOCK_NAME, 1); 
+            sprintf(sock, "%s/%s%s/%s-%d", tmp, SOCK_DIR, user, SOCK_NAME, 1);
         }
     }
 
     return sock;
 }
 
-static int readBlock(int fd, char* pData, int size)
+static int readBlock(int fd, char *pData, int size)
 {
-    int bytesToRead=size;
+    int bytesToRead = size;
 
-    do
-    {
+    do {
         fd_set fdSet;
 
         FD_ZERO(&fdSet);
         FD_SET(fd, &fdSet);
 
-        if(select(fd + 1, &fdSet, NULL, NULL, NULL)<0)
+        if (select(fd + 1, &fdSet, NULL, NULL, NULL) < 0) {
             return 0;
-
-        if(FD_ISSET(fd, &fdSet))
-        {
-            int bytesRead=read(fd, &pData[size-bytesToRead], bytesToRead);
-
-            if (bytesRead>0)
-                bytesToRead-=bytesRead;
-            else
-                return 0;
         }
-    }
-    while(bytesToRead>0);
+
+        if (FD_ISSET(fd, &fdSet)) {
+            int bytesRead = read(fd, &pData[size - bytesToRead], bytesToRead);
+
+            if (bytesRead > 0) {
+                bytesToRead -= bytesRead;
+            } else {
+                return 0;
+            }
+        }
+    } while (bytesToRead > 0);
 
     return 1;
 }
 
 static int writeBlock(int fd, const char *pData, int size)
 {
-    int bytesToWrite=size;
+    int bytesToWrite = size;
 
-    do
-    {
+    do {
         fd_set fdSet;
 
         FD_ZERO(&fdSet);
         FD_SET(fd, &fdSet);
 
-        if(select(fd + 1, NULL, &fdSet, NULL, NULL)<0)
+        if (select(fd + 1, NULL, &fdSet, NULL, NULL) < 0) {
             return 0;
-
-        if(FD_ISSET(fd, &fdSet))
-        {
-            int bytesWritten=write(fd, (char *)&pData[size-bytesToWrite], bytesToWrite);
-
-            if (bytesWritten>0)
-                bytesToWrite-=bytesWritten;
-            else
-                return 0;
         }
-    }
-    while(bytesToWrite>0);
+
+        if (FD_ISSET(fd, &fdSet)) {
+            int bytesWritten = write(fd, (char *)&pData[size - bytesToWrite], bytesToWrite);
+
+            if (bytesWritten > 0) {
+                bytesToWrite -= bytesWritten;
+            } else {
+                return 0;
+            }
+        }
+    } while (bytesToWrite > 0);
 
     return 1;
 }
@@ -193,21 +192,19 @@ static int writeBlock(int fd, const char *pData, int size)
 
     To enable this, a lockfile is created, and used to guard around the critical sections
 */
-static int lockFd=-1;
+static int lockFd = -1;
 
 #define LOCK_EXT ".lock"
 
-static const char * getLockName()
+static const char *getLockName()
 {
-    static char *lockName=NULL;
+    static char *lockName = NULL;
 
-    if(!lockName)
-    {
-        const char *sock=getSockName();
+    if (!lockName) {
+        const char *sock = getSockName();
 
-        if(sock)
-        {
-            lockName=(char *)malloc(strlen(sock)+strlen(LOCK_EXT)+1);
+        if (sock) {
+            lockName = (char *)malloc(strlen(sock) + strlen(LOCK_EXT) + 1);
             sprintf(lockName, "%s%s", sock, LOCK_EXT);
         }
     }
@@ -220,36 +217,32 @@ static int isStale(const char *fname)
 {
     struct stat stat_buf;
 
-    return 0!=stat(fname, &stat_buf) ||
-           labs(stat_buf.st_mtime-time(NULL))>2;
+    return 0 != stat(fname, &stat_buf) ||
+           labs(stat_buf.st_mtime - time(NULL)) > 2;
 }
 
 static int grabLock(int tries)
 {
-    do
-    {
-        lockFd=open(getLockName(), O_WRONLY | O_CREAT | O_EXCL, 0777);
-        if (lockFd<0 && errno==EEXIST)
-        {
+    do {
+        lockFd = open(getLockName(), O_WRONLY | O_CREAT | O_EXCL, 0777);
+
+        if (lockFd < 0 && errno == EEXIST) {
             /* Hmm, lock file already exists. Is it stale? */
-            if(isStale(getLockName()))
-            {
+            if (isStale(getLockName())) {
                 tries++;  /* Increment tries so that we try again... */
                 unlink(getLockName());
-            }
-            else if(tries)
+            } else if (tries) {
                 usleep(100000);
+            }
         }
-    }
-    while(lockFd<0 && --tries);
+    } while (lockFd < 0 && --tries);
 
     return lockFd;
 }
 
 static void releaseLock()
 {
-    if(lockFd>0)
-    {
+    if (lockFd > 0) {
         close(lockFd);
         unlink(getLockName());
     }

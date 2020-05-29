@@ -21,21 +21,21 @@ class KDialogDFileDialog : public QFileDialog
 {
     Q_OBJECT
 
-    public:
+public:
 
-    KDialogDFileDialog(QString &an, Operation op, const QString& startDir, const QString& filter,
+    KDialogDFileDialog(QString &an, Operation op, const QString &startDir, const QString &filter,
                        const QString &customWidgets, bool confirmOw);
     virtual ~KDialogDFileDialog();
 
-    public slots:
+public slots:
 
     void accept() override;
 
-    signals:
+signals:
 
     void ok(const QStringList &items);
 
-    private:
+private:
 
     bool                     itsConfirmOw,
                              itsDone;
@@ -47,21 +47,21 @@ class KDialogDDirSelectDialog : public QFileDialog
 {
     Q_OBJECT
 
-    public:
+public:
 
     KDialogDDirSelectDialog(QString &an, const QString &startDir = QString(),
                             bool localOnly = false,  QWidget *parent = 0L);
     virtual ~KDialogDDirSelectDialog();
 
-    public slots:
+public slots:
 
     void slotOk();
 
-    signals:
+signals:
 
     void ok(const QStringList &items);
 
-    private:
+private:
 
     QString &itsAppName;
 };
@@ -70,34 +70,40 @@ class KDialogDClient : public QObject
 {
     Q_OBJECT
 
-    public:
+public:
 
     KDialogDClient(int sock, const QString &an, QObject *parent);
     virtual ~KDialogDClient();
 
-    public slots:
+public slots:
 
     void read();
     void close();
     void ok(const QStringList &items);
     void finished();
 
-    signals:
+signals:
 
     void error(KDialogDClient *);
 
-    private:
+private:
 
     void cancel();
     bool readData(QByteArray &buffer, int size);
-    bool readData(char *buffer, int size)        { return readBlock(itsFd, buffer, size); }
-    bool writeData(const char *buffer, int size) { return writeBlock(itsFd, buffer, size); }
+    bool readData(char *buffer, int size)
+    {
+        return readBlock(itsFd, buffer, size);
+    }
+    bool writeData(const char *buffer, int size)
+    {
+        return writeBlock(itsFd, buffer, size);
+    }
     bool readString(QString &str);
     bool writeString(const QString &str);
     void initDialog(const QString &caption, QDialog *d);
     bool eventFilter(QObject *object, QEvent *event) override;
 
-    private:
+private:
 
     int          itsFd;
     QDialog      *itsDlg;
@@ -110,20 +116,23 @@ class KDialogD : public QObject
 {
     Q_OBJECT
 
-    public:
+public:
 
-    KDialogD(QObject *parent=0L);
+    KDialogD(QObject *parent = 0L);
     virtual ~KDialogD();
 
-    public slots:
+public slots:
 
     void newConnection();
     void deleteConnection(KDialogDClient *client);
     void timeout();
 
-    static KConfig * config() { return theirConfig; }
+    static KConfig *config()
+    {
+        return theirConfig;
+    }
 
-    private:
+private:
 
 #ifdef KDIALOGD_APP
     QTimer *itsTimer;
@@ -138,7 +147,7 @@ class KDialogD : public QObject
 #ifndef KDIALOGD_APP
 class KDialogDKDED : public KDEDModule
 {
-    public:
+public:
 
     KDialogDKDED();
 };

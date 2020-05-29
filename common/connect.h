@@ -54,7 +54,7 @@ typedef gboolean kgtk_bool;
 #endif
 
 
-static int kdialogdSocket=-1;
+static int kdialogdSocket = -1;
 
 /* From kdelibs/kdesu */
 #ifdef KDIALOGD_APP
@@ -64,35 +64,50 @@ static int createSocketConnection()
 #endif
 {
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x01) printf("KGTK::createSocketConnection A\n");
+
+    if (kgtkDebug & 0x01) {
+        printf("KGTK::createSocketConnection A\n");
+    }
+
 #endif
-    int sockfd=-1;
-    const char *sock=getSockName();
+    int sockfd = -1;
+    const char *sock = getSockName();
     struct sockaddr_un addr;
 
-    if (access(sock, R_OK|W_OK))
-    {
+    if (access(sock, R_OK | W_OK)) {
 #ifdef KGTK_DEBUG
-        if(kgtkDebug&0x01) printf("KGTK::createSocketConnection - Could not access socket, %s\n", sock);
+
+        if (kgtkDebug & 0x01) {
+            printf("KGTK::createSocketConnection - Could not access socket, %s\n", sock);
+        }
+
 #endif
         return -1;
     }
 
     sockfd = socket(PF_UNIX, SOCK_STREAM, 0);
-    if (sockfd < 0)
-    {
+
+    if (sockfd < 0) {
 #ifdef KGTK_DEBUG
-        if(kgtkDebug&0x01) printf("KGTK::createSocketConnection - Could not create socket, %d\n", errno);
+
+        if (kgtkDebug & 0x01) {
+            printf("KGTK::createSocketConnection - Could not create socket, %d\n", errno);
+        }
+
 #endif
         return -1;
     }
+
     addr.sun_family = AF_UNIX;
     strcpy(addr.sun_path, sock);
 
-    if (connect(sockfd, (struct sockaddr *) &addr, SUN_LEN(&addr)) < 0)
-    {
+    if (connect(sockfd, (struct sockaddr *) &addr, SUN_LEN(&addr)) < 0) {
 #ifdef KGTK_DEBUG
-        if(kgtkDebug&0x01) printf("KGTK::createSocketConnection - Could not connect socket, %d\n", errno);
+
+        if (kgtkDebug & 0x01) {
+            printf("KGTK::createSocketConnection - Could not connect socket, %d\n", errno);
+        }
+
 #endif
         close(sockfd);
         return -1;
@@ -101,20 +116,23 @@ static int createSocketConnection()
 #if !defined(SO_PEERCRED) || !defined(HAVE_STRUCT_UCRED)
 # if defined(HAVE_GETPEEREID)
     {
-    uid_t euid;
-    gid_t egid;
-    /* Security: if socket exists, we must own it */
-    if (getpeereid(sockfd, &euid, &egid) == 0)
-    {
-       if (euid != getuid())
-       {
+        uid_t euid;
+        gid_t egid;
+
+        /* Security: if socket exists, we must own it */
+        if (getpeereid(sockfd, &euid, &egid) == 0) {
+            if (euid != getuid()) {
 #ifdef KGTK_DEBUG
-            if(kgtkDebug&0x01) printf("KGTK::createSocketConnection - socket not owned by me! socket uid %d\n", euid);
+
+                if (kgtkDebug & 0x01) {
+                    printf("KGTK::createSocketConnection - socket not owned by me! socket uid %d\n", euid);
+                }
+
 #endif
-            close(sockfd);
-            return -1;
-       }
-    }
+                close(sockfd);
+                return -1;
+            }
+        }
     }
 # else
 #  ifdef __GNUC__
@@ -125,55 +143,73 @@ static int createSocketConnection()
        to delete it after we connect but shouldn't be able to
        create a socket that is owned by us. */
     {
-    struct stat s;
-    if (lstat(sock, &s)!=0)
-    {
-#ifdef KGTK_DEBUG
-        if(kgtkDebug&0x01) printf("KGTK::createSocketConnection - stat failed %s\n", sock);
-#endif
-        close(sockfd);
-        return -1;
-    }
-    if (s.st_uid != getuid())
-    {
-#ifdef KGTK_DEBUG
-        if(kgtkDebug&0x01) printf("KGTK::createSocketConnection - socket not owned by me! socket uid %d\n", s.st_uid);
-#endif
-        close(sockfd);
-        return -1;
-    }
-    if (!S_ISSOCK(s.st_mode))
-    {
-#ifdef KGTK_DEBUG
-        if(kgtkDebug&0x01) printf("KGTK::createSocketConnection - socket is not a socket %s\n", sock);
-#endif
-        close(sockfd);
-        return -1;
-    }
-    }
-# endif
-#else
-    {
-    struct ucred cred;
-    socklen_t siz = sizeof(cred);
+        struct stat s;
 
-    /* Security: if socket exists, we must own it */
-    if (getsockopt(sockfd, SOL_SOCKET, SO_PEERCRED, &cred, &siz) == 0)
-    {
-        if (cred.uid != getuid())
-        {
+        if (lstat(sock, &s) != 0) {
 #ifdef KGTK_DEBUG
-            if(kgtkDebug&0x01) printf("KGTK::createSocketConnection - socket not owned by me! socket uid %d\n", cred.uid);
+
+            if (kgtkDebug & 0x01) {
+                printf("KGTK::createSocketConnection - stat failed %s\n", sock);
+            }
+
+#endif
+            close(sockfd);
+            return -1;
+        }
+
+        if (s.st_uid != getuid()) {
+#ifdef KGTK_DEBUG
+
+            if (kgtkDebug & 0x01) {
+                printf("KGTK::createSocketConnection - socket not owned by me! socket uid %d\n", s.st_uid);
+            }
+
+#endif
+            close(sockfd);
+            return -1;
+        }
+
+        if (!S_ISSOCK(s.st_mode)) {
+#ifdef KGTK_DEBUG
+
+            if (kgtkDebug & 0x01) {
+                printf("KGTK::createSocketConnection - socket is not a socket %s\n", sock);
+            }
+
 #endif
             close(sockfd);
             return -1;
         }
     }
+# endif
+#else
+    {
+        struct ucred cred;
+        socklen_t siz = sizeof(cred);
+
+        /* Security: if socket exists, we must own it */
+        if (getsockopt(sockfd, SOL_SOCKET, SO_PEERCRED, &cred, &siz) == 0) {
+            if (cred.uid != getuid()) {
+#ifdef KGTK_DEBUG
+
+                if (kgtkDebug & 0x01) {
+                    printf("KGTK::createSocketConnection - socket not owned by me! socket uid %d\n", cred.uid);
+                }
+
+#endif
+                close(sockfd);
+                return -1;
+            }
+        }
     }
 #endif
 
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x01) printf("KGTK::createSocketConnection - sockfd:%d\n", sockfd);
+
+    if (kgtkDebug & 0x01) {
+        printf("KGTK::createSocketConnection - sockfd:%d\n", sockfd);
+    }
+
 #endif
     return sockfd;
 }
@@ -181,75 +217,96 @@ static int createSocketConnection()
 #ifdef KDIALOGD_APP
 static int createSocketConnection()
 {
-    int rv=-1,
-        tries=0;
+    int rv = -1,
+        tries = 0;
 
-    do
-    {
-        if(-1==(rv=createSocketConnectionReal()))
+    do {
+        if (-1 == (rv = createSocketConnectionReal())) {
             usleep(100000);
-    }
-    while(-1==rv && ++tries<50);
+        }
+    } while (-1 == rv && ++tries < 50);
 
-    if(-1==rv)
+    if (-1 == rv) {
         fprintf(stderr, "ERROR: Could not talk to KDialogD!!!\n");
+    }
+
     return rv;
 }
 #endif
 
-static int kdialogdPid=-1;
+static int kdialogdPid = -1;
 
 static kgtk_bool processIsRunning()
 {
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x01) printf("KGTK::processIsRunning\n");
+
+    if (kgtkDebug & 0x01) {
+        printf("KGTK::processIsRunning\n");
+    }
+
 #endif
 
-    if(-1!=kdialogdPid && 0==kill(kdialogdPid, 0))
-    {
+    if (-1 != kdialogdPid && 0 == kill(kdialogdPid, 0)) {
 #ifdef KGTK_DEBUG
-        if(kgtkDebug&0x01) printf("KGTK::processIsRunning (%d) YES\n", kdialogdPid);
+
+        if (kgtkDebug & 0x01) {
+            printf("KGTK::processIsRunning (%d) YES\n", kdialogdPid);
+        }
+
 #endif
         return KGTK_TRUE;
-    }
-    else
-    {
-        FILE *f=fopen(getPidFileName(), "r");
+    } else {
+        FILE *f = fopen(getPidFileName(), "r");
 
-        if(f)
-        {
-            int pid=0;
+        if (f) {
+            int pid = 0;
 
-            if(1==fscanf(f, "%d", &pid))
-            {
+            if (1 == fscanf(f, "%d", &pid)) {
                 fclose(f);
 
-                if(-1!=kdialogdPid && kdialogdPid!=pid)
-                {
+                if (-1 != kdialogdPid && kdialogdPid != pid) {
 #ifdef KGTK_DEBUG
-                    if(kgtkDebug&0x01) printf("KGTK::processIsRunning pid has changed from:%d to %d - need to reconnect\n", kdialogdPid, pid);
+
+                    if (kgtkDebug & 0x01) {
+                        printf("KGTK::processIsRunning pid has changed from:%d to %d - need to reconnect\n", kdialogdPid, pid);
+                    }
+
 #endif
-                    kdialogdPid=pid;
+                    kdialogdPid = pid;
                     return KGTK_FALSE;
                 }
+
 #ifdef KGTK_DEBUG
-                if(kgtkDebug&0x01) printf("KGTK::processIsRunning file has pid:%d\n", pid);
+
+                if (kgtkDebug & 0x01) {
+                    printf("KGTK::processIsRunning file has pid:%d\n", pid);
+                }
+
 #endif
-                if(0==kill(pid, 0))
-                {
+
+                if (0 == kill(pid, 0)) {
 #ifdef KGTK_DEBUG
-                    if(kgtkDebug&0x01) printf("KGTK::processIsRunning (file:%d) YES\n", pid);
+
+                    if (kgtkDebug & 0x01) {
+                        printf("KGTK::processIsRunning (file:%d) YES\n", pid);
+                    }
+
 #endif
-                    kdialogdPid=pid;
+                    kdialogdPid = pid;
                     return KGTK_TRUE;
                 }
 
-                kdialogdPid=-1; /* Process is not running! */
+                kdialogdPid = -1; /* Process is not running! */
             }
         }
     }
+
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x01) printf("KGTK::processIsRunning NO\n");
+
+    if (kgtkDebug & 0x01) {
+        printf("KGTK::processIsRunning NO\n");
+    }
+
 #endif
     return KGTK_FALSE;
 }
@@ -257,10 +314,14 @@ static kgtk_bool processIsRunning()
 static void closeConnection()
 {
 #ifdef KGTK_DEBUG
-        if(kgtkDebug&0x01) printf("KGTK::closeConnection\n");
+
+    if (kgtkDebug & 0x01) {
+        printf("KGTK::closeConnection\n");
+    }
+
 #endif
     close(kdialogdSocket);
-    kdialogdSocket=-1;
+    kdialogdSocket = -1;
 }
 
 /* Note: Calling 'fork' seems to mess things up with eclipse! */
@@ -269,23 +330,33 @@ static void closeConnection()
 static kgtk_bool connectToKDialogD(const char *appName)
 {
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x01) printf("KGTK::connectToKDialogD %s\n", appName ? appName : "<null>");
+
+    if (kgtkDebug & 0x01) {
+        printf("KGTK::connectToKDialogD %s\n", appName ? appName : "<null>");
+    }
+
 #endif
-    if(!processIsRunning())
+
+    if (!processIsRunning()) {
         closeConnection();
+    }
 
-    if(-1!=kdialogdSocket)
+    if (-1 != kdialogdSocket) {
         return KGTK_TRUE;
-    else
-    {
-        unsigned int slen=strlen(appName);
-        kgtk_bool    rv=KGTK_TRUE;
+    } else {
+        unsigned int slen = strlen(appName);
+        kgtk_bool    rv = KGTK_TRUE;
 
-        if(slen)
+        if (slen) {
             slen++;
+        }
 
 #ifdef KGTK_DEBUG
-        if(kgtkDebug&0x01) printf("KGTK::connectToKDialogD - start app\n");
+
+        if (kgtkDebug & 0x01) {
+            printf("KGTK::connectToKDialogD - start app\n");
+        }
+
 #endif
 
 #ifdef KDIALOGD_APP
@@ -293,37 +364,40 @@ static kgtk_bool connectToKDialogD(const char *appName)
 #ifdef KGTK_USE_SYSTEM_CALL
         system(KDIALOGD_LOCATION"/kdialogd5 &");
 #else
-        switch(fork())
-        {
-            case -1:
-                rv=KGTK_FALSE;
-                printf("ERROR: Could not start fork :-(\n");
-                break;
-            case 0:
-                execl(KDIALOGD_LOCATION"/kdialogd5", "kdialogd5", (char *)NULL);
-                break;
-            default:
-            {
-                int status=0;
-                wait(&status);
-            }
+
+        switch (fork()) {
+        case -1:
+            rv = KGTK_FALSE;
+            printf("ERROR: Could not start fork :-(\n");
+            break;
+
+        case 0:
+            execl(KDIALOGD_LOCATION"/kdialogd5", "kdialogd5", (char *)NULL);
+            break;
+
+        default: {
+            int status = 0;
+            wait(&status);
         }
+        }
+
 #endif
         releaseLock();
 #endif
 
-        if(!rv)
+        if (!rv) {
             return rv;
+        }
 
-        rv=
+        rv =
 #ifdef KDIALOGD_APP
-           grabLock(3)>0 &&
+            grabLock(3) > 0 &&
 #else
-           0==system("dcop kded kded loadModule kdialogd") &&
+            0 == system("dcop kded kded loadModule kdialogd") &&
 #endif
-           -1!=(kdialogdSocket=createSocketConnection()) &&
-           writeBlock(kdialogdSocket, (char *)&slen, 4) &&
-           (0==slen || writeBlock(kdialogdSocket, appName, slen));
+            -1 != (kdialogdSocket = createSocketConnection()) &&
+            writeBlock(kdialogdSocket, (char *)&slen, 4) &&
+            (0 == slen || writeBlock(kdialogdSocket, appName, slen));
 #ifdef KDIALOGD_APP
         releaseLock();
 #endif
