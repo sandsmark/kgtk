@@ -1,10 +1,13 @@
 #ifndef __KDIALOGD_H__
 #define __KDIALOGD_H__
 
-#include <qfiledialog.h>
+#include <QFileDialog>
+#include <QLoggingCategory>
+#include <QMap>
+
 #include "common.h"
 #include "config.h"
-#include <QtCore/QMap>
+
 
 #ifdef KDIALOGD_APP
 class QTimer;
@@ -140,5 +143,7 @@ class KDialogDKDED : public KDEDModule
     KDialogDKDED();
 };
 #endif
+
+Q_DECLARE_LOGGING_CATEGORY(kdialogd)
 
 #endif
