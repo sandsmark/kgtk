@@ -51,18 +51,19 @@ Notes
 
 The library has been tested with the following applications:
 
-Reported to work:
+Reported to work (A bit outdated):
 
   1. Firefox (7.0.1)
   2. Thunderbird 7.0.1
   3. Inkscape
-  4. GIMP
+  4. GIMP (2.10)
   5. Kino
   6. Eclipse
   7. Azureus
   8. Galde-2
   9. Streamtuner
  10. Avidemux2
+ 11. XSane (save dialog appears twice, but uses the name)
 
 Reported *not* working:
 
