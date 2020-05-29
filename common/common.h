@@ -221,7 +221,7 @@ static int isStale(const char *fname)
     struct stat stat_buf;
 
     return 0!=stat(fname, &stat_buf) ||
-           abs(stat_buf.st_mtime-time(NULL))>2;
+           labs(stat_buf.st_mtime-time(NULL))>2;
 }
 
 static int grabLock(int tries)

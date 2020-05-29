@@ -81,6 +81,9 @@ TODO
 #define KGTK_DLSYM_VERSION "GLIBC_2.0"
 #endif
 
+#define FUNC_ENTER printf("%s\n", __PRETTY_FUNCTION__);
+#define FUNC_EXIT printf("%s\n", __PRETTY_FUNCTION__);
+
 /*
  * For SWT apps (e.g. eclipse) we need to override dlsym, but we can only do this if
  * dlvsym is present in libdl. dlvsym is needed so that we can access the real dlsym
@@ -583,8 +586,12 @@ kgtk_file_chooser_dialog_new_valist (const gchar          *title,
                          "file-system-backend", backend,
                          NULL);
 
-  if (parent)
+  if (parent) {
+#ifdef KGTK_DEBUG
+    if(kgtkDebug&0x02) printf("Setting transient for window %p\n", parent);
+#endif
     gtk_window_set_transient_for (GTK_WINDOW (result), parent);
+  }
 
   while (button_text)
     {
@@ -648,7 +655,7 @@ static KGtkFileData * lookupHash(void *hash, gboolean create)
     KGtkFileData *rv=NULL;
 
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x02) printf("KGTK::lookupHash %X\n", (int)hash);
+    if(kgtkDebug&0x02) printf("KGTK::lookupHash %p\n", hash);
 #endif
     if(!fileDialogHash)
         fileDialogHash=g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -818,7 +825,7 @@ static KGtkFilterData * lookupFilterHash(void *hash, gboolean create)
         rv=g_hash_table_lookup(filterHash, hash);
         filterHashCount++;
 #ifdef KGTK_DEBUG
-        if(kgtkDebug&0x08) printf("KGTK::lookupFilterHash %X created new\n", (int)hash);
+        if(kgtkDebug&0x08) printf("KGTK::lookupFilterHash %p created new\n", hash);
 #endif
     }
     return rv;
@@ -850,7 +857,7 @@ static void freeFilterHash(void *hash)
         g_hash_table_remove(filterHash, hash);
         filterHashCount--;
 #ifdef KGTK_DEBUG
-        if(kgtkDebug&0x08) printf("KGTK::freeFilterHash %X free'd\n", (int)hash);
+        if(kgtkDebug&0x08) printf("KGTK::freeFilterHash %p free'd\n", hash);
 #endif
     }
 }
@@ -880,7 +887,7 @@ void gtk_file_filter_add_mime_type(GtkFileFilter *filter, const gchar *mime_type
     static void * (*realFunction)() = NULL;
 
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x08) printf("KGTK::gtk_file_filter_add_mime_type %X %s\n", (unsigned int)filter, mime_type);
+    if(kgtkDebug&0x08) printf("KGTK::gtk_file_filter_add_mime_type %p %s\n", filter, mime_type);
 #endif
     if(!realFunction)
         realFunction = (void *(*)()) real_dlsym(RTLD_NEXT, "gtk_file_filter_add_mime_type");
@@ -898,7 +905,7 @@ void gtk_file_filter_add_pattern(GtkFileFilter *filter, const gchar *pattern)
     static void * (*realFunction)() = NULL;
 
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x08) printf("KGTK::gtk_file_filter_add_pattern %X %s\n", (unsigned int)filter, pattern);
+    if(kgtkDebug&0x08) printf("KGTK::gtk_file_filter_add_pattern %p %s\n", filter, pattern);
 #endif
     if(!realFunction)
         realFunction = (void *(*)()) real_dlsym(RTLD_NEXT, "gtk_file_filter_add_pattern");
@@ -916,7 +923,7 @@ void gtk_file_filter_add_pixbuf_formats(GtkFileFilter *filter)
     static void * (*realFunction)() = NULL;
 
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x08) printf("KGTK::gtk_file_filter_add_pixbuf_formats %X\n", (unsigned int)filter);
+    if(kgtkDebug&0x08) printf("KGTK::gtk_file_filter_add_pixbuf_formats %p\n", filter);
 #endif
     if(!realFunction)
         realFunction = (void *(*)()) real_dlsym(RTLD_NEXT, "gtk_file_filter_add_pixbuf_formats");
@@ -936,7 +943,7 @@ void gtk_file_filter_add_custom(GtkFileFilter *filter, GtkFileFilterFlags needed
     static void * (*realFunction)() = NULL;
 
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x08) printf("KGTK::gtk_file_filter_add_custom %X %X %X\n", (unsigned int)filter, (int)needed, (void *)data);
+    if(kgtkDebug&0x08) printf("KGTK::gtk_file_filter_add_custom %p %X %p\n", filter, (int)needed, (void *)data);
 #endif
     if(!realFunction)
         realFunction = (void *(*)()) real_dlsym(RTLD_NEXT, "gtk_file_filter_add_custom");
@@ -1740,6 +1747,8 @@ void gtk_widget_hide(GtkWidget *widget)
 {
     static void * (*realFunction)() = NULL;
 
+    FUNC_ENTER
+
     if(!realFunction)
         realFunction = (void *(*)()) real_dlsym(RTLD_NEXT, "gtk_widget_hide");
 
@@ -1756,16 +1765,18 @@ void gtk_widget_hide(GtkWidget *widget)
     }
     else
         realFunction(widget);
+
+    FUNC_EXIT
 }
 
 gboolean gtk_file_chooser_get_do_overwrite_confirmation(GtkFileChooser *widget)
 {
-    static void * (*realFunction)() = NULL;
+    static gboolean (*realFunction)(GtkFileChooser *chooser) = NULL;
 
     gboolean rv=FALSE;
 
     if(!realFunction)
-        realFunction = (void *(*)()) real_dlsym(RTLD_NEXT, "gtk_file_chooser_get_do_overwrite_confirmation");
+        realFunction = real_dlsym(RTLD_NEXT, "gtk_file_chooser_get_do_overwrite_confirmation");
 
     if(realFunction)
     {
@@ -1828,12 +1839,12 @@ int gtk_combo_box_get_active(GtkComboBox *combo)
         return 1;
     else
     {
-        static void * (*realFunction)() = NULL;
+        static int (*realFunction)(GtkComboBox *combo_box) = NULL;
 
         if(!realFunction)
-            realFunction = (void *(*)()) real_dlsym(RTLD_NEXT, "gtk_combo_box_get_active");
+            realFunction = real_dlsym(RTLD_NEXT, "gtk_combo_box_get_active");
 
-        rv=(int)realFunction(combo);
+        rv=realFunction(combo);
     }
 
     return rv;
@@ -1841,10 +1852,10 @@ int gtk_combo_box_get_active(GtkComboBox *combo)
 
 gint gtk_dialog_run(GtkDialog *dialog)
 {
-    static void * (*realFunction)() = NULL;
+    static gint (*realFunction)(GtkDialog *dialog) = NULL;
 
     if(!realFunction)
-        realFunction = (void *(*)()) real_dlsym(RTLD_NEXT, "gtk_dialog_run");
+        realFunction = real_dlsym(RTLD_NEXT, "gtk_dialog_run");
 
 #ifdef KGTK_DEBUG
     if(kgtkDebug&0x02) printf("KGTK::gtk_dialog_run %s \n", dialog ? g_type_name(G_OBJECT_TYPE(dialog)) : "<null>");
@@ -2814,7 +2825,7 @@ void * dlsym(void *handle, const char *name)
     void *rv=NULL;
 
 #ifdef KGTK_DEBUG
-    if(kgtkDebug&0x20) printf("KGTK::dlsym : (%04X) %s\n", (int)handle, name);
+    if(kgtkDebug&0x20) printf("KGTK::dlsym : (%p) %s\n", handle, name);
 #endif
     rv=kgtk_get_fnptr(name);
 
