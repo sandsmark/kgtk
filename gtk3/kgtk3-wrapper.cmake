@@ -11,6 +11,9 @@
 # --
 #
 
+KDE_VERSION=5
+LIBSUFF=".${KDE_VERSION}"
+
 if [ "`locale | grep 'LANG=' | grep -i 'utf-8' | wc -l`" = "0" ] ; then
     export G_BROKEN_FILENAMES=1
 fi
@@ -28,5 +31,6 @@ else
 
     if [ "$real" != "" ] && [ "`dirname $real`" != "$dir" ] ; then
         LD_PRELOAD=@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libkgtk3.so:$LD_PRELOAD $real "$@"
+        LD_PRELOAD="@CMAKE_INSTALL_PREFIX@/lib@LIB_SUFFIX@/kgtk/libkgtk3.so${LIBSUFF}:$LD_PRELOAD" $real "$@"
     fi
 fi
