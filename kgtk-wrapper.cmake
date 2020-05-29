@@ -46,7 +46,7 @@ if [ "$toolkit" = "" ] ; then
             toolkit="gtk3" ;;
         gimp | inkscape | kino)
             toolkit="gtk2" ;;
-        kino | iceweasel | swiftfox | mozilla* | thunderbird)
+        kino | iceweasel | swiftfox | mozilla* | thunderbird | firefox)
             toolkit="gtk3" ;;
         abiword) # Non-working
             toolkit="x" ;;
