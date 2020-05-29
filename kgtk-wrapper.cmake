@@ -14,16 +14,9 @@
 # be used when launching the app
 #
 
-case "$KDE_SESSION_VERSION"
-in
-5)	KRC="kreadconfig${KDE_SESSION_VERSION}"
-	LIBSUFF=".${KDE_SESSION_VERSION}"
-	;;
-
-*)	KRC="kreadconfig"
-	LIBSUFF=""
-	;;
-esac
+KDE_VERSION=5
+KRC="kreadconfig${KDE_VERSION}"
+LIBSUFF=".${KDE_VERSION}"
 
 if [ "$(locale | grep 'LANG=' | grep -i 'utf-8' | wc -l)" = "0" ] ; then
     export G_BROKEN_FILENAMES=1
